@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/login_c.dart';
-import 'package:hrd_system_project/models/login_m.dart';
+import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/views/home_v.dart';
 import 'package:hrd_system_project/views/login_v.dart';
 import 'package:provider/provider.dart';
