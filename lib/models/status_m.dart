@@ -65,3 +65,23 @@ class InfoStatusState {
     }
   }
 }
+
+enum RequestType {
+  cutiTahunan,
+  izinSakit,
+  businessTrip,
+  claimReimbursment;
+
+  String get displayName {
+    switch (this) {
+      case RequestType.cutiTahunan:
+        return 'Cuti Tahunan';
+      case RequestType.izinSakit:
+        return 'Izin Sakit';
+      case RequestType.businessTrip:
+        return 'Business Trip';
+      case RequestType.claimReimbursment:
+        return 'Claim Reimbursment';
+    }
+  }
+}

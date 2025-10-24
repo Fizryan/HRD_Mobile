@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
+import 'package:hrd_system_project/data/user_requests_data.dart';
+import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
+import 'package:hrd_system_project/models/user_requests_m.dart';
 import 'package:hrd_system_project/widgets/general_w.dart';
 
 class HrdPanel extends StatefulWidget {
@@ -15,10 +18,16 @@ class _HrdPanelState extends State<HrdPanel>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  final ApprovalStatusState _statusHelper = ApprovalStatusState();
+  final InfoStatusState _infoStatusHelper = InfoStatusState();
+
+  late List<ApprovalRequest> _pendingRequests;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _pendingRequests = UserRequestsData.getPendingRequests();
   }
 
   @override
@@ -27,17 +36,75 @@ class _HrdPanelState extends State<HrdPanel>
     super.dispose();
   }
 
+  void _handleApproval(int requestId, {required bool isApproved}) {
+    final request = _pendingRequests.firstWhere(
+      (request) => request.id == requestId,
+    );
+    setState(() {
+      request.status = isApproved
+          ? ApprovalStatus.approved
+          : ApprovalStatus.denied;
+    });
+
+    final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
+    final message = 'Pengajuan dari ${request.name} telah $status.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            _infoStatusHelper.getInfoStatusIcon(status),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _infoStatusHelper.getInfoStatusColor(status),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     int currentEmployee = CurrentRandom.getIntRandom(50, 200);
     String currentDate = CurrentDate.getDate();
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: _buildHeader(context, currentDate: currentDate),
+        ),
+        TabBar(
+          controller: _tabController,
+          labelColor: ColorUser().getColor(widget.user.role),
+          indicatorColor: ColorUser().getColor(widget.user.role),
+          unselectedLabelColor: Colors.grey,
+          tabs: const [
+            Tab(text: 'Summary'),
+            Tab(text: 'Approval'),
+            Tab(text: 'Employee'),
+          ],
+        ),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _dashboardSummary(currentDate, currentEmployee),
+              _buildApprovalList(),
+              const Center(child: Text('Employee tab content')),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dashboardSummary(String currentDate, int currentEmployee) {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(context, currentDate: currentDate),
             const SizedBox(height: 16),
             _buildStatsGrid(
               currentDate: currentDate,
@@ -54,6 +121,122 @@ class _HrdPanelState extends State<HrdPanel>
             const SizedBox(height: 24),
             _buildQuickActions(),
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApprovalList() {
+    if (_pendingRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
+            const SizedBox(height: 16),
+            const Text(
+              'Tidak ada pengajuan pending',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: _pendingRequests.length,
+      itemBuilder: (context, index) {
+        final request = _pendingRequests[index];
+        return _buildApprovalTabs(request);
+      },
+    );
+  }
+
+  Widget _buildApprovalTabs(ApprovalRequest approvalRequest) {
+    String formattedAmount = 'N/A';
+    if (approvalRequest.amount != null && approvalRequest.amount! > 0) {
+      formattedAmount = 'Rp ${approvalRequest.amount!.toStringAsFixed(0)}';
+    }
+
+    String subtitleLine1 =
+        (approvalRequest.type == RequestType.claimReimbursment)
+        ? '${approvalRequest.type.displayName} - $formattedAmount'
+        : '${approvalRequest.type.displayName} - ${approvalRequest.days} hari';
+
+    String date = approvalRequest.date;
+    String reason = approvalRequest.reason;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: ColorUser().getColor(widget.user.role),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+
+        leading: CircleAvatar(
+          backgroundColor: _statusHelper.getApprovalStatusColor(
+            approvalRequest.status,
+          ),
+          child: Text(
+            approvalRequest.name.substring(0, 1),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: _statusHelper.getApprovalStatusColor(
+                approvalRequest.status,
+              ),
+            ),
+          ),
+        ),
+
+        title: Text(
+          approvalRequest.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              subtitleLine1,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              reason,
+              style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(date, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          ],
+        ),
+        isThreeLine: true,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.red),
+              onPressed: () {
+                _handleApproval(approvalRequest.id, isApproved: false);
+              },
+              tooltip: 'Tolak',
+            ),
+            IconButton(
+              icon: const Icon(Icons.check, color: Colors.green),
+              onPressed: () {
+                _handleApproval(approvalRequest.id, isApproved: true);
+              },
+              tooltip: 'Setujui',
+            ),
           ],
         ),
       ),
@@ -82,16 +265,13 @@ class _HrdPanelState extends State<HrdPanel>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.purple[50],
+            color: ColorUser().getColor(widget.user.role),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.purple[100]!),
+            border: Border.all(color: Colors.white, width: 1),
           ),
           child: Text(
             currentDate,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.purple[800],
-            ),
+            style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
           ),
         ),
       ],
