@@ -37,3 +37,17 @@ final List<User> dummyUsers = [
     salary: 5000000.0,
   ),
 ];
+
+class UserList {
+  static List<User> getFilteredUsers(String query) {
+    final filteredUsers = dummyUsers
+        .where(
+          (user) =>
+              user.name.toLowerCase().contains(query.toLowerCase()) ||
+              user.displayRole.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+
+    return filteredUsers;
+  }
+}

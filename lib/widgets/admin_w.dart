@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hrd_system_project/data/date.dart';
+import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/data/user_data.dart';
 import 'package:hrd_system_project/models/user_m.dart';
@@ -15,7 +15,6 @@ class AdminPanel extends StatefulWidget {
 class _AdminPanelState extends State<AdminPanel>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _searchController = TextEditingController();
   final String _searchQuery = '';
 
   @override
@@ -27,29 +26,18 @@ class _AdminPanelState extends State<AdminPanel>
   @override
   void dispose() {
     _tabController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredUsers = dummyUsers
-        .where(
-          (user) =>
-              user.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              user.displayRole.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
-        )
-        .toList();
-
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            buildStatsHeader(widgetsChildrens, widget.user),
+            GeneralWidget().buildStatsHeader(headerChildrens, widget.user),
             const SizedBox(height: 24),
             Card(
               elevation: 2,
@@ -85,9 +73,13 @@ class _AdminPanelState extends State<AdminPanel>
                       child: TabBarView(
                         controller: _tabController,
                         children: [
-                          _buildUserManagement(filteredUsers),
-                          _buildActivityLogs(filteredUsers),
-                          _buildSystemInfo(),
+                          _buildUserManagement(
+                            UserList.getFilteredUsers(_searchQuery),
+                          ),
+                          _buildActivityLogs(
+                            UserList.getFilteredUsers(_searchQuery),
+                          ),
+                          GeneralWidget().buildSystemInfo(systemInfoChildrens),
                         ],
                       ),
                     ),
@@ -101,7 +93,7 @@ class _AdminPanelState extends State<AdminPanel>
     );
   }
 
-  List<Widget> get widgetsChildrens => <Widget>[
+  List<Widget> get headerChildrens => <Widget>[
     Expanded(
       child: _buildStatItem(
         'Total Users',
@@ -337,7 +329,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                       DataCell(
                         Text(
-                          '${filteredUsers[CurrentDate.getIntRandom(0, filteredUsers.length - 1)].name}',
+                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
                         ),
                       ),
                     ],
@@ -362,7 +354,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                       DataCell(
                         Text(
-                          '${filteredUsers[CurrentDate.getIntRandom(0, filteredUsers.length - 1)].name}',
+                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
                         ),
                       ),
                     ],
@@ -387,7 +379,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                       DataCell(
                         Text(
-                          '${filteredUsers[CurrentDate.getIntRandom(0, filteredUsers.length - 1)].name}',
+                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
                         ),
                       ),
                     ],
@@ -412,7 +404,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                       DataCell(
                         Text(
-                          '${filteredUsers[CurrentDate.getIntRandom(0, filteredUsers.length - 1)].name}',
+                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
                         ),
                       ),
                     ],
@@ -437,7 +429,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                       DataCell(
                         Text(
-                          '${filteredUsers[CurrentDate.getIntRandom(0, filteredUsers.length - 1)].name}',
+                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
                         ),
                       ),
                     ],
@@ -462,7 +454,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                       DataCell(
                         Text(
-                          '${filteredUsers[CurrentDate.getIntRandom(0, filteredUsers.length - 1)].name}',
+                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
                         ),
                       ),
                     ],
@@ -476,58 +468,34 @@ class _AdminPanelState extends State<AdminPanel>
     );
   }
 
-  Widget _buildSystemInfo() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'System Info',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                buildInfoCard(
-                  'Server Status',
-                  'Online',
-                  Icons.cloud,
-                  Colors.green,
-                  context,
-                ),
-                buildInfoCard(
-                  'Database Status',
-                  '${CurrentDate.getIntRandom(5, 45)}%',
-                  Icons.storage,
-                  Colors.blue,
-                  context,
-                ),
-                buildInfoCard(
-                  'Memory Usage',
-                  '${CurrentDate.getIntRandom(7, 70)}%',
-                  Icons.memory,
-                  Colors.orange,
-                  context,
-                ),
-                buildInfoCard(
-                  'CPU Load',
-                  '${CurrentDate.getIntRandom(4, 75)}%',
-                  Icons.speed,
-                  Colors.purple,
-                  context,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  List<Widget> get systemInfoChildrens => <Widget>[
+    GeneralWidget().buildInfoCard(
+      'Server Status',
+      'Online',
+      Icons.cloud,
+      Colors.green,
+      context,
+    ),
+    GeneralWidget().buildInfoCard(
+      'Database Status',
+      '${CurrentRandom.getIntRandom(5, 45)}%',
+      Icons.storage,
+      Colors.blue,
+      context,
+    ),
+    GeneralWidget().buildInfoCard(
+      'Memory Usage',
+      '${CurrentRandom.getIntRandom(7, 70)}%',
+      Icons.memory,
+      Colors.orange,
+      context,
+    ),
+    GeneralWidget().buildInfoCard(
+      'CPU Load',
+      '${CurrentRandom.getIntRandom(4, 75)}%',
+      Icons.speed,
+      Colors.purple,
+      context,
+    ),
+  ];
 }

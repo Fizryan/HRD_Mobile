@@ -3,6 +3,8 @@ import 'package:hrd_system_project/controllers/login_c.dart';
 import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/widgets/admin_w.dart';
+import 'package:hrd_system_project/widgets/hrd_w.dart';
+import 'package:hrd_system_project/widgets/supervisor_w.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatelessWidget {
@@ -48,9 +50,9 @@ class HomeView extends StatelessWidget {
       case UserRole.admin:
         return AdminPanel(user: user);
       case UserRole.supervisor:
-        throw UnimplementedError();
+        return SupervisorPanel(user: user);
       case UserRole.hrd:
-        throw UnimplementedError();
+        return HrdPanel(user: user);
       case UserRole.finance:
         throw UnimplementedError();
       case UserRole.employee:

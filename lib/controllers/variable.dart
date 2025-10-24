@@ -2,10 +2,10 @@ import 'dart:math';
 
 class CurrentDate {
   static String getTime() {
-    final random = Random();
-    int hour = random.nextInt(24);
-    int minute = random.nextInt(60);
-    int second = random.nextInt(60);
+    final now = DateTime.now();
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
     return '$hour:$minute:$second';
   }
 
@@ -30,9 +30,16 @@ class CurrentDate {
     ];
     return '$day ${months[month - 1]} $year';
   }
+}
 
+class CurrentRandom {
   static int getIntRandom(int min, int max) {
     final random = Random();
     return random.nextInt(max - min + 1) + min;
+  }
+
+  static double getDoubleRandom(double min, double max) {
+    final random = Random();
+    return min + random.nextDouble() * (max - min);
   }
 }
