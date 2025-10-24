@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:hrd_system_project/data/user_data.dart';
-import 'package:hrd_system_project/models/login_m.dart';
+import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 
 class LoginControl extends ChangeNotifier {
