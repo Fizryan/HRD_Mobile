@@ -85,6 +85,7 @@ class GeneralWidget {
     int randomInt,
     Icon iconUser,
     User user,
+    TabController tabController,
   ) => <Card>[
     Card(
       elevation: 4,
@@ -102,7 +103,11 @@ class GeneralWidget {
         title: Text(titleText, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text("$randomInt, $subtitleText"),
         trailing: iconUser,
-        onTap: () {},
+        onTap: () {
+          if (titleText == "Pengajuan Cuti" && user.role == UserRole.hrd) {
+            tabController.animateTo(1);
+          }
+        },
       ),
     ),
   ];

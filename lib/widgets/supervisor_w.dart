@@ -43,6 +43,7 @@ class _SupervisorPanelState extends State<SupervisorPanel>
               CurrentRandom.getIntRandom(0, 12),
               Icon(Icons.chevron_right),
               widget.user,
+              _tabController,
             ),
             const SizedBox(height: 24),
             Text(

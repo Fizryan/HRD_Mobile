@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hrd_system_project/controllers/hrd_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
+import 'package:hrd_system_project/data/user_data.dart';
 import 'package:hrd_system_project/data/user_requests_data.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
@@ -22,49 +24,40 @@ class _HrdPanelState extends State<HrdPanel>
   final InfoStatusState _infoStatusHelper = InfoStatusState();
 
   late List<ApprovalRequest> _pendingRequests;
+  late HrdController _hrdController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _pendingRequests = UserRequestsData.getPendingRequests();
+    _pendingRequests = UserRequestsData.getPendingRequests()
+        .where(
+          (req) =>
+              (req.role == UserRole.supervisor ||
+                  req.role == UserRole.finance ||
+                  req.role == UserRole.admin) &&
+              req.type != RequestType.claimReimbursment,
+        )
+        .toList();
+    _hrdController = HrdController();
+    _hrdController.addListener(_onEmployeeDataChanged);
+  }
+
+  void _onEmployeeDataChanged() {
+    setState(() {});
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _hrdController.removeListener(_onEmployeeDataChanged);
+    _hrdController.dispose();
     super.dispose();
-  }
-
-  void _handleApproval(int requestId, {required bool isApproved}) {
-    final request = _pendingRequests.firstWhere(
-      (request) => request.id == requestId,
-    );
-    setState(() {
-      request.status = isApproved
-          ? ApprovalStatus.approved
-          : ApprovalStatus.denied;
-    });
-
-    final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
-    final message = 'Pengajuan dari ${request.name} telah $status.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            _infoStatusHelper.getInfoStatusIcon(status),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: _infoStatusHelper.getInfoStatusColor(status),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    int currentEmployee = CurrentRandom.getIntRandom(50, 200);
+    int currentEmployee = dummyUsers.length;
     String currentDate = CurrentDate.getDate();
     return Column(
       children: [
@@ -88,9 +81,9 @@ class _HrdPanelState extends State<HrdPanel>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _dashboardSummary(currentDate, currentEmployee),
+              _dashboardSummary(currentDate, currentEmployee, _tabController),
               _buildApprovalList(),
-              const Center(child: Text('Employee tab content')),
+              _buildEmployeeTab(),
             ],
           ),
         ),
@@ -98,151 +91,7 @@ class _HrdPanelState extends State<HrdPanel>
     );
   }
 
-  Widget _dashboardSummary(String currentDate, int currentEmployee) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 16),
-            _buildStatsGrid(
-              currentDate: currentDate,
-              currentEmployee: currentEmployee,
-            ),
-            const SizedBox(height: 8),
-            ...GeneralWidget().toDoInfoChildrens(
-              'Pengajuan Cuti',
-              'Pengajuan baru menunggu persetujuan Anda.',
-              (currentEmployee / 8).toInt(),
-              Icon(Icons.chevron_right),
-              widget.user,
-            ),
-            const SizedBox(height: 24),
-            _buildQuickActions(),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildApprovalList() {
-    if (_pendingRequests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
-            const SizedBox(height: 16),
-            const Text(
-              'Tidak ada pengajuan pending',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: _pendingRequests.length,
-      itemBuilder: (context, index) {
-        final request = _pendingRequests[index];
-        return _buildApprovalTabs(request);
-      },
-    );
-  }
-
-  Widget _buildApprovalTabs(ApprovalRequest approvalRequest) {
-    String formattedAmount = 'N/A';
-    if (approvalRequest.amount != null && approvalRequest.amount! > 0) {
-      formattedAmount = 'Rp ${approvalRequest.amount!.toStringAsFixed(0)}';
-    }
-
-    String subtitleLine1 =
-        (approvalRequest.type == RequestType.claimReimbursment)
-        ? '${approvalRequest.type.displayName} - $formattedAmount'
-        : '${approvalRequest.type.displayName} - ${approvalRequest.days} hari';
-
-    String date = approvalRequest.date;
-    String reason = approvalRequest.reason;
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: ColorUser().getColor(widget.user.role),
-          width: 1,
-        ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-
-        leading: CircleAvatar(
-          backgroundColor: _statusHelper.getApprovalStatusColor(
-            approvalRequest.status,
-          ),
-          child: Text(
-            approvalRequest.name.substring(0, 1),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: _statusHelper.getApprovalStatusColor(
-                approvalRequest.status,
-              ),
-            ),
-          ),
-        ),
-
-        title: Text(
-          approvalRequest.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              subtitleLine1,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              reason,
-              style: TextStyle(fontSize: 13, color: Colors.grey[800]),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(date, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-          ],
-        ),
-        isThreeLine: true,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red),
-              onPressed: () {
-                _handleApproval(approvalRequest.id, isApproved: false);
-              },
-              tooltip: 'Tolak',
-            ),
-            IconButton(
-              icon: const Icon(Icons.check, color: Colors.green),
-              onPressed: () {
-                _handleApproval(approvalRequest.id, isApproved: true);
-              },
-              tooltip: 'Setujui',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // #region Default
   Widget _buildHeader(BuildContext context, {required String currentDate}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -277,6 +126,40 @@ class _HrdPanelState extends State<HrdPanel>
       ],
     );
   }
+  // #endregion
+
+  // #region Summary
+  Widget _dashboardSummary(
+    String currentDate,
+    int currentEmployee,
+    TabController tabController,
+  ) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 16),
+            _buildStatsGrid(
+              currentDate: currentDate,
+              currentEmployee: currentEmployee,
+            ),
+            const SizedBox(height: 8),
+            ...GeneralWidget().toDoInfoChildrens(
+              'Pengajuan Cuti',
+              'Pengajuan baru menunggu persetujuan Anda.',
+              _pendingRequests.length,
+              Icon(Icons.chevron_right),
+              widget.user,
+              tabController,
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildStatsGrid({
     required String currentDate,
@@ -302,7 +185,7 @@ class _HrdPanelState extends State<HrdPanel>
             ),
             _buildStatCard(
               title: "Cuti Pending",
-              value: (currentEmployee / 8).toInt().toString(),
+              value: _pendingRequests.length.toString(),
               icon: Icons.beach_access_outlined,
               color: Colors.orange,
               change: "Butuh approval",
@@ -316,10 +199,13 @@ class _HrdPanelState extends State<HrdPanel>
             ),
             _buildStatCard(
               title: "Training Aktif",
-              value: CurrentRandom.getIntRandom(0, 20).toString(),
+              value: CurrentRandom.getIntRandom(
+                0,
+                dummyUsers.length,
+              ).toString(),
               icon: Icons.school_outlined,
               color: Colors.purple,
-              change: "20 peserta",
+              change: "${dummyUsers.length} peserta",
             ),
           ],
         );
@@ -407,73 +293,52 @@ class _HrdPanelState extends State<HrdPanel>
       ),
     );
   }
+  // #endregion
 
-  Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Quick Actions",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
-          ),
+  // #region Approval
+  Widget _buildApprovalList() {
+    if (_pendingRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
+            const SizedBox(height: 16),
+            const Text(
+              'Tidak ada pengajuan pending',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isNarrow = constraints.maxWidth < 380;
-            final crossAxisCount = isNarrow ? 2 : 4;
+      );
+    }
 
-            return GridView.count(
-              crossAxisCount: crossAxisCount,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.1,
-              children: [
-                _buildActionButton(
-                  icon: Icons.storage_outlined,
-                  label: "Master Data",
-                  subtitle: "Jabatan, tipe karyawan",
-                  color: Colors.purple,
-                ),
-                _buildActionButton(
-                  icon: Icons.edit_note_outlined,
-                  label: "Edit Karyawan",
-                  subtitle: "Update data karyawan",
-                  color: Colors.blue,
-                ),
-                _buildActionButton(
-                  icon: Icons.fact_check_outlined,
-                  label: "Approval Cuti",
-                  subtitle: "8 pending requests",
-                  color: Colors.orange,
-                ),
-                _buildActionButton(
-                  icon: Icons.assessment_outlined,
-                  label: "Laporan",
-                  subtitle: "Generate reports",
-                  color: Colors.green,
-                ),
-              ],
-            );
-          },
-        ),
-      ],
+    return ListView.builder(
+      itemCount: _pendingRequests.length,
+      itemBuilder: (context, index) {
+        final request = _pendingRequests[index];
+        return _buildApprovalCard(request);
+      },
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required Color color,
-  }) {
+  Widget _buildApprovalCard(ApprovalRequest approvalRequest) {
+    String formattedAmount = 'N/A';
+    if (approvalRequest.amount != null && approvalRequest.amount! > 0) {
+      formattedAmount = 'Rp ${approvalRequest.amount!.toStringAsFixed(0)}';
+    }
+
+    String subtitleLine1 =
+        (approvalRequest.type == RequestType.claimReimbursment)
+        ? '${approvalRequest.type.displayName} - $formattedAmount'
+        : '${approvalRequest.type.displayName} - ${approvalRequest.days} hari';
+
+    String date = approvalRequest.date;
+    String reason = approvalRequest.reason;
+
     return Card(
-      elevation: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -481,37 +346,397 @@ class _HrdPanelState extends State<HrdPanel>
           width: 1,
         ),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {},
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-            ],
+      child: ListTile(
+        contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+
+        leading: CircleAvatar(
+          backgroundColor: _statusHelper.getApprovalStatusColor(
+            approvalRequest.status,
           ),
+          child: Icon(Icons.person, color: Colors.white, size: 20),
+        ),
+
+        title: Text(
+          approvalRequest.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              subtitleLine1,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              reason,
+              style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(date, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          ],
+        ),
+        isThreeLine: true,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.red),
+              onPressed: () {
+                _handleApproval(approvalRequest.id, isApproved: false);
+              },
+              tooltip: 'Tolak',
+            ),
+            IconButton(
+              icon: const Icon(Icons.check, color: Colors.green),
+              onPressed: () {
+                _handleApproval(approvalRequest.id, isApproved: true);
+              },
+              tooltip: 'Setujui',
+            ),
+          ],
         ),
       ),
     );
   }
+  // #endregion
+
+  // #region Employee
+  void _showUserForm({User? userToEdit}) {
+    final formKey = GlobalKey<FormState>();
+    bool isEditMode = userToEdit != null;
+
+    final usernameController = TextEditingController(
+      text: userToEdit?.username ?? '',
+    );
+    final passwordController = TextEditingController(
+      text: userToEdit?.password ?? '',
+    );
+    final nameController = TextEditingController(text: userToEdit?.name ?? '');
+    final salaryController = TextEditingController(
+      text: userToEdit?.salary.toString() ?? '',
+    );
+
+    UserRole? selectedRole = userToEdit?.role;
+
+    final allowedRoles = [
+      UserRole.employee,
+      UserRole.supervisor,
+      UserRole.finance,
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            return Padding(
+              padding: EdgeInsetsGeometry.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 20,
+                left: 20,
+                right: 20,
+              ),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        isEditMode ? 'Edit Karyawan' : 'Tambah Karyawan',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: usernameController,
+                        obscureText: true,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'Masukkan username',
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Username tidak boleh kosong'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Masukkan password',
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Password tidak boleh kosong'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nama',
+                          hintText: 'Masukkan nama',
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Nama tidak boleh kosong'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: salaryController,
+                        decoration: const InputDecoration(
+                          labelText: 'Gaji',
+                          hintText: 'Masukkan gaji',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Gaji tidak boleh kosong'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<UserRole>(
+                        initialValue: selectedRole,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          hintText: 'Pilih role',
+                        ),
+                        items: UserRole.values
+                            .where((role) => allowedRoles.contains(role))
+                            .map((role) {
+                              return DropdownMenuItem<UserRole>(
+                                value: role,
+                                child: Text(role.name),
+                              );
+                            })
+                            .toList(),
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedRole = value;
+                          });
+                        },
+                        validator: (value) =>
+                            value == null ? 'Role tidak boleh kosong' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        child: Text(isEditMode ? 'Simpan' : 'Tambah'),
+                        onPressed: () {
+                          if (formKey.currentState!.validate()) {
+                            if (isEditMode) {
+                              _hrdController.updateUser(
+                                userToEdit: userToEdit,
+                                username: usernameController.text,
+                                password: passwordController.text,
+                                name: nameController.text,
+                                role: selectedRole!,
+                                salary: double.parse(salaryController.text),
+                              );
+                            } else {
+                              _hrdController.addUser(
+                                username: usernameController.text,
+                                password: passwordController.text,
+                                name: nameController.text,
+                                role: selectedRole!,
+                                salary: double.parse(salaryController.text),
+                              );
+                            }
+
+                            Navigator.pop(ctx);
+
+                            final status = isEditMode
+                                ? InfoStatus.updated
+                                : InfoStatus.created;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Data ${isEditMode ? 'diperbarui' : 'ditambahkan'}.',
+                                ),
+                                backgroundColor: _infoStatusHelper
+                                    .getInfoStatusColor(status),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmployeeTab() {
+    return Scaffold(
+      body: _buildEmployeeList(),
+      floatingActionButton: widget.user.role == UserRole.admin
+          ? FloatingActionButton(
+              onPressed: () => _showUserForm(),
+              tooltip: 'Tambah Karyawan',
+              backgroundColor: ColorUser().getColor(widget.user.role),
+              child: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildEmployeeList() {
+    final employeeList = _hrdController.employeeList;
+    if (employeeList.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people_outline_outlined, size: 48, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Tidak ada karyawan yang ditemukan',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: employeeList.length,
+      itemBuilder: (context, index) {
+        final employee = employeeList[index];
+        return _buildEmployeeCard(employee);
+      },
+    );
+  }
+
+  Widget _buildEmployeeCard(User employee) {
+    final roleColor = ColorUser().getColor(employee.role);
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: ColorUser().getColor(widget.user.role),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: roleColor.withValues(alpha: 0.2),
+          child: Icon(
+            employee.role == UserRole.supervisor
+                ? Icons.support_agent
+                : employee.role == UserRole.finance
+                ? Icons.account_balance_wallet
+                : Icons.person,
+            color: roleColor,
+          ),
+        ),
+        title: Text(
+          employee.name,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          'Salary Rp.${employee.salary.toStringAsFixed(0)}\nRole: ${employee.role.name}',
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.edit_outlined, color: Colors.blue[700]),
+              onPressed: () => _showUserForm(userToEdit: employee),
+              tooltip: 'Edit',
+            ),
+            if (widget.user.role == UserRole.admin) ...[
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: Colors.red[700]),
+                onPressed: () => _handleDeleteUser(employee),
+                tooltip: 'Hapus',
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+  // #endregion
+
+  // #region Handler
+
+  void _handleApproval(int requestId, {required bool isApproved}) {
+    final request = _pendingRequests.firstWhere(
+      (request) => request.id == requestId,
+    );
+    setState(() {
+      request.status = isApproved
+          ? ApprovalStatus.approved
+          : ApprovalStatus.denied;
+      _pendingRequests.remove(request);
+    });
+
+    final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
+    final message = 'Pengajuan dari ${request.name} telah $status.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            _infoStatusHelper.getInfoStatusIcon(status),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _infoStatusHelper.getInfoStatusColor(status),
+      ),
+    );
+  }
+
+  void _handleDeleteUser(User user) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Hapus Karyawan'),
+          content: Text('Anda yakin ingin menghapus ${user.name}?'),
+          actions: [
+            TextButton(
+              child: Text(
+                'Hapus',
+                style: TextStyle(
+                  color: _infoStatusHelper.getInfoStatusColor(
+                    InfoStatus.deleted,
+                  ),
+                ),
+              ),
+              onPressed: () {
+                _hrdController.deleteUser(user);
+                Navigator.of(context).pop();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Karyawan ${user.name} telah dihapus.'),
+                    backgroundColor: _infoStatusHelper.getInfoStatusColor(
+                      InfoStatus.deleted,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // #endregion
 }
