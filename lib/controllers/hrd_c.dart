@@ -17,7 +17,8 @@ class HrdController extends ChangeNotifier {
           (user) =>
               user.role == UserRole.employee ||
               user.role == UserRole.supervisor ||
-              user.role == UserRole.finance,
+              user.role == UserRole.finance ||
+              user.role == UserRole.admin,
         )
         .toList();
     notifyListeners();
