@@ -10,8 +10,9 @@ class HrdController extends ChangeNotifier {
     _loadEmployee();
   }
 
-  void _loadEmployee() {
-    _employeeList = dummyUsers
+  Future<void> _loadEmployee() async {
+    _employeeList = await UserList.getAllUsers();
+    _employeeList = _employeeList
         .where(
           (user) =>
               user.role == UserRole.employee ||
@@ -19,15 +20,16 @@ class HrdController extends ChangeNotifier {
               user.role == UserRole.finance,
         )
         .toList();
+    notifyListeners();
   }
 
-  void addUser({
+  Future<void> addUser({
     required String username,
     required String password,
     required String name,
     required UserRole role,
     required double salary,
-  }) {
+  }) async {
     final newUser = User(
       username: username,
       password: password,
@@ -35,20 +37,18 @@ class HrdController extends ChangeNotifier {
       role: role,
       salary: salary,
     );
-    _employeeList.add(newUser);
-    notifyListeners();
+    await UserList.addUser(newUser);
+    await _loadEmployee();
   }
 
-  void updateUser({
+  Future<void> updateUser({
     required User userToEdit,
     required String username,
     required String password,
     required String name,
     required UserRole role,
     required double salary,
-  }) {
-    final int index = _employeeList.indexOf(userToEdit);
-    if (index != -1) return;
+  }) async {
     final updateUser = User(
       username: username,
       password: password,
@@ -57,12 +57,12 @@ class HrdController extends ChangeNotifier {
       salary: salary,
     );
 
-    _employeeList[index] = updateUser;
-    notifyListeners();
+    await UserList.updateUser(updateUser);
+    await _loadEmployee();
   }
 
-  void deleteUser(User user) {
-    _employeeList.remove(user);
-    notifyListeners();
+  Future<void> deleteUser(User user) async {
+    await UserList.removeUser(user);
+    await _loadEmployee();
   }
 }

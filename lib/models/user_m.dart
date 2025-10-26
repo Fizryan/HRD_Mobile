@@ -15,11 +15,19 @@ class User {
     this.salary = 0.0,
   });
 
-  String get displayName {
-    return name;
-  }
+  Map<String, dynamic> toJson() => {
+    'username': username,
+    'password': password,
+    'name': name,
+    'role': role.name,
+    'salary': salary,
+  };
 
-  String get displayRole {
-    return role.toString().split('.').last;
-  }
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    username: json['username'],
+    password: json['password'],
+    name: json['name'],
+    role: UserRole.values.firstWhere((role) => role.name == json['role']),
+    salary: json['salary']?.toDouble() ?? 0.0,
+  );
 }

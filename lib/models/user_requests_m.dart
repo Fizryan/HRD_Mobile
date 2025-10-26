@@ -10,7 +10,7 @@ class ApprovalRequest {
   final int days;
   final double? amount;
   final String reason;
-  ApprovalStatus status = ApprovalStatus.pending;
+  ApprovalStatus status;
 
   ApprovalRequest({
     required this.id,
@@ -21,5 +21,31 @@ class ApprovalRequest {
     required this.days,
     this.amount,
     required this.reason,
+    this.status = ApprovalStatus.pending,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'role': role.name,
+        'type': type.name,
+        'date': date,
+        'days': days,
+        'amount': amount,
+        'reason': reason,
+        'status': status.name,
+      };
+
+  factory ApprovalRequest.fromJson(Map<String, dynamic> json) => ApprovalRequest(
+        id: json['id'],
+        name: json['name'],
+        role: UserRole.values.firstWhere((e) => e.name == json['role']),
+        type: RequestType.values.firstWhere((e) => e.name == json['type']),
+        date: json['date'],
+        days: json['days'],
+        amount: json['amount'],
+        reason: json['reason'],
+        status:
+            ApprovalStatus.values.firstWhere((e) => e.name == json['status']),
+      );
 }

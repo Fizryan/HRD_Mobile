@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrd_system_project/controllers/hrd_c.dart';
 import 'package:hrd_system_project/controllers/login_c.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/views/home_v.dart';
@@ -14,8 +15,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => LoginControl(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => LoginControl()),
+        ChangeNotifierProvider(create: (context) => HrdController()),
+      ],
       child: MaterialApp(
         title: 'HRD System',
         theme: ThemeData(primarySwatch: Colors.blue),

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/hrd_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
-import 'package:hrd_system_project/data/user_data.dart';
 import 'package:hrd_system_project/data/user_requests_data.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/models/user_requests_m.dart';
 import 'package:hrd_system_project/widgets/general_w.dart';
+import 'package:provider/provider.dart';
 
 class HrdPanel extends StatefulWidget {
   final User user;
@@ -23,42 +23,49 @@ class _HrdPanelState extends State<HrdPanel>
   final ApprovalStatusState _statusHelper = ApprovalStatusState();
   final InfoStatusState _infoStatusHelper = InfoStatusState();
 
-  late List<ApprovalRequest> _pendingRequests;
-  late HrdController _hrdController;
+  late Future<List<ApprovalRequest>> _pendingRequestsFuture;
+  List<ApprovalRequest> _pendingRequests = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _pendingRequests = UserRequestsData.getPendingRequests()
-        .where(
-          (req) =>
-              (req.role == UserRole.supervisor ||
-                  req.role == UserRole.finance ||
-                  req.role == UserRole.admin) &&
-              req.type != RequestType.claimReimbursment,
-        )
-        .toList();
-    _hrdController = HrdController();
-    _hrdController.addListener(_onEmployeeDataChanged);
+    _loadPendingRequests();
   }
 
-  void _onEmployeeDataChanged() {
-    setState(() {});
+  void _loadPendingRequests() {
+    _pendingRequestsFuture = UserRequestsData.getPendingRequests().then((
+      requests,
+    ) {
+      if (mounted) {
+        setState(() {
+          _pendingRequests = requests
+              .where(
+                (req) =>
+                    (req.role == UserRole.supervisor ||
+                        req.role == UserRole.finance ||
+                        req.role == UserRole.admin) &&
+                    req.type != RequestType.claimReimbursment,
+              )
+              .toList();
+        });
+      }
+      return _pendingRequests;
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _hrdController.removeListener(_onEmployeeDataChanged);
-    _hrdController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    int currentEmployee = dummyUsers.length;
+    final hrdController = context.watch<HrdController>();
+    int currentEmployee = hrdController.employeeList.length;
     String currentDate = CurrentDate.getDate();
+
     return Column(
       children: [
         Padding(
@@ -83,7 +90,7 @@ class _HrdPanelState extends State<HrdPanel>
             children: [
               _dashboardSummary(currentDate, currentEmployee, _tabController),
               _buildApprovalList(),
-              _buildEmployeeTab(),
+              _buildEmployeeTab(hrdController),
             ],
           ),
         ),
@@ -91,7 +98,6 @@ class _HrdPanelState extends State<HrdPanel>
     );
   }
 
-  // #region Default
   Widget _buildHeader(BuildContext context, {required String currentDate}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -126,9 +132,7 @@ class _HrdPanelState extends State<HrdPanel>
       ],
     );
   }
-  // #endregion
 
-  // #region Summary
   Widget _dashboardSummary(
     String currentDate,
     int currentEmployee,
@@ -199,13 +203,10 @@ class _HrdPanelState extends State<HrdPanel>
             ),
             _buildStatCard(
               title: "Training Aktif",
-              value: CurrentRandom.getIntRandom(
-                0,
-                dummyUsers.length,
-              ).toString(),
+              value: CurrentRandom.getIntRandom(0, currentEmployee).toString(),
               icon: Icons.school_outlined,
               color: Colors.purple,
-              change: "${dummyUsers.length} peserta",
+              change: "$currentEmployee peserta",
             ),
           ],
         );
@@ -293,31 +294,40 @@ class _HrdPanelState extends State<HrdPanel>
       ),
     );
   }
-  // #endregion
 
-  // #region Approval
   Widget _buildApprovalList() {
-    if (_pendingRequests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
-            const SizedBox(height: 16),
-            const Text(
-              'Tidak ada pengajuan pending',
-              style: TextStyle(fontSize: 18),
+    return FutureBuilder<List<ApprovalRequest>>(
+      future: _pendingRequestsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (_pendingRequests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
+                const SizedBox(height: 16),
+                const Text(
+                  'Tidak ada pengajuan pending',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    return ListView.builder(
-      itemCount: _pendingRequests.length,
-      itemBuilder: (context, index) {
-        final request = _pendingRequests[index];
-        return _buildApprovalCard(request);
+        return ListView.builder(
+          itemCount: _pendingRequests.length,
+          itemBuilder: (context, index) {
+            final request = _pendingRequests[index];
+            return _buildApprovalCard(request);
+          },
+        );
       },
     );
   }
@@ -348,19 +358,16 @@ class _HrdPanelState extends State<HrdPanel>
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-
         leading: CircleAvatar(
           backgroundColor: _statusHelper.getApprovalStatusColor(
             approvalRequest.status,
           ),
           child: Icon(Icons.person, color: Colors.white, size: 20),
         ),
-
         title: Text(
           approvalRequest.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -387,14 +394,14 @@ class _HrdPanelState extends State<HrdPanel>
             IconButton(
               icon: const Icon(Icons.close, color: Colors.red),
               onPressed: () {
-                _handleApproval(approvalRequest.id, isApproved: false);
+                _handleApproval(approvalRequest, isApproved: false);
               },
               tooltip: 'Tolak',
             ),
             IconButton(
               icon: const Icon(Icons.check, color: Colors.green),
               onPressed: () {
-                _handleApproval(approvalRequest.id, isApproved: true);
+                _handleApproval(approvalRequest, isApproved: true);
               },
               tooltip: 'Setujui',
             ),
@@ -403,9 +410,7 @@ class _HrdPanelState extends State<HrdPanel>
       ),
     );
   }
-  // #endregion
 
-  // #region Employee
   void _showUserForm({User? userToEdit}) {
     final formKey = GlobalKey<FormState>();
     bool isEditMode = userToEdit != null;
@@ -436,7 +441,7 @@ class _HrdPanelState extends State<HrdPanel>
         return StatefulBuilder(
           builder: (modalContext, setModalState) {
             return Padding(
-              padding: EdgeInsetsGeometry.only(
+              padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
                 top: 20,
                 left: 20,
@@ -529,10 +534,11 @@ class _HrdPanelState extends State<HrdPanel>
                       const SizedBox(height: 16),
                       ElevatedButton(
                         child: Text(isEditMode ? 'Simpan' : 'Tambah'),
-                        onPressed: () {
+                        onPressed: () async {
                           if (formKey.currentState!.validate()) {
+                            final hrdController = context.read<HrdController>();
                             if (isEditMode) {
-                              _hrdController.updateUser(
+                              await hrdController.updateUser(
                                 userToEdit: userToEdit,
                                 username: usernameController.text,
                                 password: passwordController.text,
@@ -541,7 +547,7 @@ class _HrdPanelState extends State<HrdPanel>
                                 salary: double.parse(salaryController.text),
                               );
                             } else {
-                              _hrdController.addUser(
+                              await hrdController.addUser(
                                 username: usernameController.text,
                                 password: passwordController.text,
                                 name: nameController.text,
@@ -549,12 +555,12 @@ class _HrdPanelState extends State<HrdPanel>
                                 salary: double.parse(salaryController.text),
                               );
                             }
-
-                            Navigator.pop(ctx);
-
                             final status = isEditMode
                                 ? InfoStatus.updated
                                 : InfoStatus.created;
+                            if (!mounted) return;
+                            Navigator.pop(context);
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -579,9 +585,9 @@ class _HrdPanelState extends State<HrdPanel>
     );
   }
 
-  Widget _buildEmployeeTab() {
+  Widget _buildEmployeeTab(HrdController hrdController) {
     return Scaffold(
-      body: _buildEmployeeList(),
+      body: _buildEmployeeList(hrdController),
       floatingActionButton: widget.user.role == UserRole.admin
           ? FloatingActionButton(
               onPressed: () => _showUserForm(),
@@ -593,8 +599,8 @@ class _HrdPanelState extends State<HrdPanel>
     );
   }
 
-  Widget _buildEmployeeList() {
-    final employeeList = _hrdController.employeeList;
+  Widget _buildEmployeeList(HrdController hrdController) {
+    final employeeList = hrdController.employeeList;
     if (employeeList.isEmpty) {
       return const Center(
         child: Column(
@@ -633,7 +639,7 @@ class _HrdPanelState extends State<HrdPanel>
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: roleColor.withValues(alpha: 0.2),
+          backgroundColor: roleColor.withAlpha(50),
           child: Icon(
             employee.role == UserRole.supervisor
                 ? Icons.support_agent
@@ -670,14 +676,11 @@ class _HrdPanelState extends State<HrdPanel>
       ),
     );
   }
-  // #endregion
 
-  // #region Handler
-
-  void _handleApproval(int requestId, {required bool isApproved}) {
-    final request = _pendingRequests.firstWhere(
-      (request) => request.id == requestId,
-    );
+  void _handleApproval(
+    ApprovalRequest request, {
+    required bool isApproved,
+  }) async {
     setState(() {
       request.status = isApproved
           ? ApprovalStatus.approved
@@ -685,8 +688,12 @@ class _HrdPanelState extends State<HrdPanel>
       _pendingRequests.remove(request);
     });
 
+    await UserRequestsData.saveRequests(_pendingRequests);
+
+    if (!mounted) return;
     final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
     final message = 'Pengajuan dari ${request.name} telah $status.';
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -704,7 +711,7 @@ class _HrdPanelState extends State<HrdPanel>
   void _handleDeleteUser(User user) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text('Hapus Karyawan'),
           content: Text('Anda yakin ingin menghapus ${user.name}?'),
@@ -718,10 +725,13 @@ class _HrdPanelState extends State<HrdPanel>
                   ),
                 ),
               ),
-              onPressed: () {
-                _hrdController.deleteUser(user);
-                Navigator.of(context).pop();
+              onPressed: () async {
+                final hrdController = context.read<HrdController>();
+                await hrdController.deleteUser(user);
 
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Karyawan ${user.name} telah dihapus.'),
@@ -737,6 +747,4 @@ class _HrdPanelState extends State<HrdPanel>
       },
     );
   }
-
-  // #endregion
 }

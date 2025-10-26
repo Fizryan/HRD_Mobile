@@ -15,7 +15,7 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Dashboard ${user.displayRole}"),
+        title: Text("Dashboard ${user.role.name}"),
         backgroundColor: ColorUser().getColor(user.role),
         actions: [
           IconButton(
@@ -32,7 +32,7 @@ class HomeView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hallo! ${user.displayName}',
+              'Hallo! ${user.role.name}',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),

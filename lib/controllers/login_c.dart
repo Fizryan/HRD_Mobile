@@ -18,9 +18,9 @@ class LoginControl extends ChangeNotifier {
     _errorMessage = '';
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 0));
+    final users = await UserList.getAllUsers();
 
-    final userFound = dummyUsers.firstWhereOrNull(
+    final userFound = users.firstWhereOrNull(
       (user) => user.username == username && user.password == password,
     );
 

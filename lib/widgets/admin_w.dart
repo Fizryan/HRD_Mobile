@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hrd_system_project/controllers/hrd_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
-import 'package:hrd_system_project/data/user_data.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/widgets/general_w.dart';
+import 'package:provider/provider.dart';
 
 class AdminPanel extends StatefulWidget {
   final User user;
@@ -12,10 +13,8 @@ class AdminPanel extends StatefulWidget {
   State<AdminPanel> createState() => _AdminPanelState();
 }
 
-class _AdminPanelState extends State<AdminPanel>
-    with SingleTickerProviderStateMixin {
+class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final String _searchQuery = '';
 
   @override
   void initState() {
@@ -31,89 +30,92 @@ class _AdminPanelState extends State<AdminPanel>
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GeneralWidget().buildStatsHeader(headerChildrens, widget.user),
-            const SizedBox(height: 24),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: ColorUser().getColor(widget.user.role),
-                  width: 1,
+    return Consumer<HrdController>(
+      builder: (context, hrdController, child) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GeneralWidget().buildStatsHeader(
+                  headerChildrens(hrdController.employeeList.length),
+                  widget.user,
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: ColorUser().getColor(widget.user.role),
-                      indicatorColor: ColorUser().getColor(widget.user.role),
-                      unselectedLabelColor: Colors.grey,
-                      tabs: [
-                        Tab(
-                          text: 'Users',
-                          icon: const Icon(Icons.person_outline_rounded),
+                const SizedBox(height: 24),
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: ColorUser().getColor(widget.user.role),
+                      width: 1,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TabBar(
+                          controller: _tabController,
+                          labelColor: ColorUser().getColor(widget.user.role),
+                          indicatorColor: ColorUser().getColor(widget.user.role),
+                          unselectedLabelColor: Colors.grey,
+                          tabs: [
+                            Tab(
+                              text: 'Users',
+                              icon: const Icon(Icons.person_outline_rounded),
+                            ),
+                            Tab(text: 'Logs', icon: Icon(Icons.history)),
+                            Tab(text: 'System', icon: Icon(Icons.settings)),
+                          ],
                         ),
-                        Tab(text: 'Logs', icon: Icon(Icons.history)),
-                        Tab(text: 'System', icon: Icon(Icons.settings)),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 350,
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildUserManagement(hrdController.employeeList),
+                              _buildActivityLogs(hrdController.employeeList),
+                              GeneralWidget().buildSystemInfo(systemInfoChildrens),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 350,
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildUserManagement(
-                            UserList.getFilteredUsers(_searchQuery),
-                          ),
-                          _buildActivityLogs(
-                            UserList.getFilteredUsers(_searchQuery),
-                          ),
-                          GeneralWidget().buildSystemInfo(systemInfoChildrens),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  List<Widget> get headerChildrens => <Widget>[
-    Expanded(
-      child: _buildStatItem(
-        'Total Users',
-        dummyUsers.length.toString(),
-        Icons.people,
-        Colors.blue,
-      ),
-    ),
-    Expanded(
-      child: _buildStatItem('Active User', '12', Icons.today, Colors.green),
-    ),
-    Expanded(
-      child: _buildStatItem(
-        'System Status',
-        'Normal',
-        Icons.check_circle,
-        Colors.blue,
-      ),
-    ),
-  ];
+  List<Widget> headerChildrens(int totalUsers) => <Widget>[
+        Expanded(
+          child: _buildStatItem(
+            'Total Users',
+            totalUsers.toString(),
+            Icons.people,
+            Colors.blue,
+          ),
+        ),
+        Expanded(
+          child: _buildStatItem('Active User', '12', Icons.today, Colors.green),
+        ),
+        Expanded(
+          child: _buildStatItem(
+            'System Status',
+            'Normal',
+            Icons.check_circle,
+            Colors.blue,
+          ),
+        ),
+      ];
 
   Widget _buildStatItem(
     String title,
@@ -135,9 +137,9 @@ class _AdminPanelState extends State<AdminPanel>
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
         Text(
           title,
@@ -176,7 +178,6 @@ class _AdminPanelState extends State<AdminPanel>
           ],
         ),
         const SizedBox(height: 16),
-
         Expanded(
           child: Card(
             elevation: 1,
@@ -232,11 +233,11 @@ class _AdminPanelState extends State<AdminPanel>
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Text(user.displayName),
+                              Text(user.role.name),
                             ],
                           ),
                         ),
-                        DataCell(Row(children: [Text(user.displayRole)])),
+                        DataCell(Row(children: [Text(user.role.name)])),
                         DataCell(
                           Row(
                             children: [
@@ -257,7 +258,7 @@ class _AdminPanelState extends State<AdminPanel>
     );
   }
 
-  Widget _buildActivityLogs(filteredUsers) {
+  Widget _buildActivityLogs(List<User> filteredUsers) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -309,156 +310,37 @@ class _AdminPanelState extends State<AdminPanel>
                   ),
                 ],
                 rows: [
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              CurrentDate.getTime(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
+                  if (filteredUsers.isNotEmpty)
+                    for (var i = 0; i < 5; i++)
+                      DataRow(
+                        cells: [
+                          DataCell(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  CurrentDate.getTime(),
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                Text(
+                                  CurrentDate.getDate(),
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                              ],
                             ),
+                          ),
+                          DataCell(
                             Text(
-                              CurrentDate.getDate(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
+                              filteredUsers[CurrentRandom.getIntRandom(
+                                0,
+                                filteredUsers.length - 1,
+                              )]
+                                  .name,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      DataCell(
-                        Text(
-                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
-                        ),
-                      ),
-                    ],
-                  ),
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              CurrentDate.getTime(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              CurrentDate.getDate(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
-                        ),
-                      ),
-                    ],
-                  ),
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              CurrentDate.getTime(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              CurrentDate.getDate(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
-                        ),
-                      ),
-                    ],
-                  ),
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              CurrentDate.getTime(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              CurrentDate.getDate(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
-                        ),
-                      ),
-                    ],
-                  ),
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              CurrentDate.getTime(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              CurrentDate.getDate(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
-                        ),
-                      ),
-                    ],
-                  ),
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              CurrentDate.getTime(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              CurrentDate.getDate(),
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          '${filteredUsers[CurrentRandom.getIntRandom(0, filteredUsers.length - 1)].name}',
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -469,33 +351,33 @@ class _AdminPanelState extends State<AdminPanel>
   }
 
   List<Widget> get systemInfoChildrens => <Widget>[
-    GeneralWidget().buildInfoCard(
-      'Server Status',
-      'Online',
-      Icons.cloud,
-      Colors.green,
-      context,
-    ),
-    GeneralWidget().buildInfoCard(
-      'Database Status',
-      '${CurrentRandom.getIntRandom(5, 45)}%',
-      Icons.storage,
-      Colors.blue,
-      context,
-    ),
-    GeneralWidget().buildInfoCard(
-      'Memory Usage',
-      '${CurrentRandom.getIntRandom(7, 70)}%',
-      Icons.memory,
-      Colors.orange,
-      context,
-    ),
-    GeneralWidget().buildInfoCard(
-      'CPU Load',
-      '${CurrentRandom.getIntRandom(4, 75)}%',
-      Icons.speed,
-      Colors.purple,
-      context,
-    ),
-  ];
+        GeneralWidget().buildInfoCard(
+          'Server Status',
+          'Online',
+          Icons.cloud,
+          Colors.green,
+          context,
+        ),
+        GeneralWidget().buildInfoCard(
+          'Database Status',
+          '${CurrentRandom.getIntRandom(5, 45)}%',
+          Icons.storage,
+          Colors.blue,
+          context,
+        ),
+        GeneralWidget().buildInfoCard(
+          'Memory Usage',
+          '${CurrentRandom.getIntRandom(7, 70)}%',
+          Icons.memory,
+          Colors.orange,
+          context,
+        ),
+        GeneralWidget().buildInfoCard(
+          'CPU Load',
+          '${CurrentRandom.getIntRandom(4, 75)}%',
+          Icons.speed,
+          Colors.purple,
+          context,
+        ),
+      ];
 }
