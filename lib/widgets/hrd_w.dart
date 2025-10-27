@@ -42,7 +42,8 @@ class _HrdPanelState extends State<HrdPanel>
           _pendingRequests = requests
               .where(
                 (req) =>
-                    (req.role == UserRole.supervisor ||
+                    (req.role == UserRole.employee ||
+                        req.role == UserRole.supervisor ||
                         req.role == UserRole.finance ||
                         req.role == UserRole.admin) &&
                     req.type != RequestType.claimReimbursment,
@@ -339,7 +340,7 @@ class _HrdPanelState extends State<HrdPanel>
     }
 
     String subtitleLine1 =
-        (approvalRequest.type == RequestType.claimReimbursment)
+        (approvalRequest.type != RequestType.claimReimbursment)
         ? '${approvalRequest.type.displayName} - $formattedAmount'
         : '${approvalRequest.type.displayName} - ${approvalRequest.days} hari';
 
@@ -565,6 +566,8 @@ class _HrdPanelState extends State<HrdPanel>
                               SnackBar(
                                 content: Text(
                                   'Data ${isEditMode ? 'diperbarui' : 'ditambahkan'}.',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
                                 ),
                                 backgroundColor: _infoStatusHelper
                                     .getInfoStatusColor(status),
@@ -600,7 +603,9 @@ class _HrdPanelState extends State<HrdPanel>
   }
 
   Widget _buildEmployeeList(HrdController hrdController) {
-    final employeeList = hrdController.employeeList;
+    final employeeList = hrdController.employeeList
+        .where((user) => user.role != UserRole.admin)
+        .toList();
     if (employeeList.isEmpty) {
       return const Center(
         child: Column(
