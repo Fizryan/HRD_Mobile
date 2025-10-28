@@ -27,6 +27,7 @@ class _SupervisorPanelState extends State<SupervisorPanel>
     super.dispose();
   }
 
+  // #region build
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -73,10 +74,13 @@ class _SupervisorPanelState extends State<SupervisorPanel>
       ),
     );
   }
+  // #endregion
 
+  // #region header
   List<Widget> get headerChildrens => <Widget>[
     Expanded(
-      child: _buildStatItem(
+      child: GeneralWidget().buildStatItem(
+        context,
         'Employee',
         CurrentRandom.getIntRandom(4, 12).toString(),
         Icons.people,
@@ -84,7 +88,8 @@ class _SupervisorPanelState extends State<SupervisorPanel>
       ),
     ),
     Expanded(
-      child: _buildStatItem(
+      child: GeneralWidget().buildStatItem(
+        context,
         'Active Employee',
         CurrentRandom.getIntRandom(0, 12).toString(),
         Icons.today,
@@ -92,42 +97,9 @@ class _SupervisorPanelState extends State<SupervisorPanel>
       ),
     ),
   ];
+  // #endregion
 
-  Widget _buildStatItem(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey[800]),
-        ),
-      ],
-    );
-  }
-
+  // #region chart
   List<SizedBox> _superVisorChartChildrens() => <SizedBox>[
     SizedBox(
       height: 180,
@@ -165,7 +137,9 @@ class _SupervisorPanelState extends State<SupervisorPanel>
       ),
     ),
   ];
+  // #endregion
 
+  // #region team member progress
   Widget _buildTeamMemberProgress({
     required String name,
     required double progress,
@@ -197,4 +171,5 @@ class _SupervisorPanelState extends State<SupervisorPanel>
       ),
     );
   }
+  // #endregion
 }

@@ -16,6 +16,7 @@ class UserController extends ChangeNotifier {
         .where(
           (user) =>
               user.role == UserRole.employee ||
+              user.role == UserRole.hrd ||
               user.role == UserRole.supervisor ||
               user.role == UserRole.finance ||
               user.role == UserRole.admin,
@@ -64,6 +65,11 @@ class UserController extends ChangeNotifier {
 
   Future<void> deleteUser(User user) async {
     await UserList.removeUser(user);
+    await _loadEmployee();
+  }
+
+  Future<void> clearAllData() async {
+    await UserList.clearAllUsers();
     await _loadEmployee();
   }
 }

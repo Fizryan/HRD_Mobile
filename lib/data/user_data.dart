@@ -74,6 +74,11 @@ class UserList {
 
     return filteredUsers;
   }
+
+  static Future<void> clearAllUsers() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyUsers);
+  }
 }
 
 final List<User> dummyUsers = [

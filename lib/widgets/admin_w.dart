@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
+import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/widgets/general_w.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ class AdminPanel extends StatefulWidget {
 class _AdminPanelState extends State<AdminPanel>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final InfoStatusState _infoStatusHelper = InfoStatusState();
 
   @override
   void initState() {
@@ -29,6 +31,7 @@ class _AdminPanelState extends State<AdminPanel>
     super.dispose();
   }
 
+  // #region build
   @override
   Widget build(BuildContext context) {
     return Consumer<UserController>(
@@ -80,11 +83,9 @@ class _AdminPanelState extends State<AdminPanel>
                           child: TabBarView(
                             controller: _tabController,
                             children: [
-                              _buildUserManagement(hrdController.employeeList),
+                              _buildUserManagement(hrdController),
                               _buildActivityLogs(hrdController.employeeList),
-                              GeneralWidget().buildSystemInfo(
-                                systemInfoChildrens,
-                              ),
+                              _buildSystemManagement(),
                             ],
                           ),
                         ),
@@ -99,10 +100,13 @@ class _AdminPanelState extends State<AdminPanel>
       },
     );
   }
+  // #endregion
 
+  // #region header
   List<Widget> headerChildrens(int totalUsers) => <Widget>[
     Expanded(
-      child: _buildStatItem(
+      child: GeneralWidget().buildStatItem(
+        context,
         'Total Users',
         totalUsers.toString(),
         Icons.people,
@@ -110,10 +114,17 @@ class _AdminPanelState extends State<AdminPanel>
       ),
     ),
     Expanded(
-      child: _buildStatItem('Active User', '12', Icons.today, Colors.green),
+      child: GeneralWidget().buildStatItem(
+        context,
+        'Active User',
+        '12',
+        Icons.today,
+        Colors.green,
+      ),
     ),
     Expanded(
-      child: _buildStatItem(
+      child: GeneralWidget().buildStatItem(
+        context,
         'System Status',
         'Normal',
         Icons.check_circle,
@@ -121,43 +132,10 @@ class _AdminPanelState extends State<AdminPanel>
       ),
     ),
   ];
+  // #endregion
 
-  Widget _buildStatItem(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey[800]),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUserManagement(List<User> users) {
+  // #region user management
+  Widget _buildUserManagement(UserController hrdController) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -165,7 +143,7 @@ class _AdminPanelState extends State<AdminPanel>
           children: [
             const SizedBox(width: 12),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () => _showUserForm(),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add User'),
               style: ElevatedButton.styleFrom(
@@ -217,8 +195,14 @@ class _AdminPanelState extends State<AdminPanel>
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
+                    DataColumn(
+                      label: Text(
+                        'Actions',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
-                  rows: users.map((user) {
+                  rows: hrdController.employeeList.map((user) {
                     return DataRow(
                       cells: [
                         DataCell(
@@ -238,16 +222,32 @@ class _AdminPanelState extends State<AdminPanel>
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Text(user.role.name),
+                              Text(user.name),
                             ],
                           ),
                         ),
-                        DataCell(Row(children: [Text(user.role.name)])),
+                        DataCell(Text(user.role.name)),
+                        DataCell(Text('Rp.${user.salary}')),
                         DataCell(
                           Row(
                             children: [
-                              const SizedBox(width: 4),
-                              Text('Rp.${user.salary}'),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.edit_outlined,
+                                  color: Colors.blue[700],
+                                ),
+                                onPressed: () =>
+                                    _showUserForm(userToEdit: user),
+                                tooltip: 'Edit',
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red[700],
+                                ),
+                                onPressed: () => _handleDeleteUser(user),
+                                tooltip: 'Hapus',
+                              ),
                             ],
                           ),
                         ),
@@ -262,7 +262,9 @@ class _AdminPanelState extends State<AdminPanel>
       ],
     );
   }
+  // #endregion
 
+  // #region activity logs
   Widget _buildActivityLogs(List<User> filteredUsers) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -354,7 +356,48 @@ class _AdminPanelState extends State<AdminPanel>
       ],
     );
   }
+  // #endregion
 
+  // #region system management
+  Widget _buildSystemManagement() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'System Info',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1,
+              physics: const NeverScrollableScrollPhysics(),
+              children: systemInfoChildrens,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _showClearDataConfirmationDialog,
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('Clear App Data'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  // #endregion
+
+  // #region system info
   List<Widget> get systemInfoChildrens => <Widget>[
     GeneralWidget().buildInfoCard(
       'Server Status',
@@ -385,4 +428,266 @@ class _AdminPanelState extends State<AdminPanel>
       context,
     ),
   ];
+  // #endregion
+
+  // #region user form
+  void _showUserForm({User? userToEdit}) {
+    final formKey = GlobalKey<FormState>();
+    bool isEditMode = userToEdit != null;
+
+    final usernameController = TextEditingController(
+      text: userToEdit?.username ?? '',
+    );
+    final passwordController = TextEditingController(
+      text: userToEdit?.password ?? '',
+    );
+    final nameController = TextEditingController(text: userToEdit?.name ?? '');
+    final salaryController = TextEditingController(
+      text: userToEdit?.salary.toString() ?? '',
+    );
+
+    UserRole? selectedRole = userToEdit?.role;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 20,
+                left: 20,
+                right: 20,
+              ),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        isEditMode ? 'Edit User' : 'Add User',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: usernameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'Enter username',
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Username cannot be empty'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Enter password',
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Password cannot be empty'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          hintText: 'Enter name',
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Name cannot be empty'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: salaryController,
+                        decoration: const InputDecoration(
+                          labelText: 'Salary',
+                          hintText: 'Enter salary',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Salary cannot be empty'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<UserRole>(
+                        initialValue: selectedRole,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          hintText: 'Select role',
+                        ),
+                        items: UserRole.values.map((role) {
+                          return DropdownMenuItem<UserRole>(
+                            value: role,
+                            child: Text(role.name),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedRole = value;
+                          });
+                        },
+                        validator: (value) =>
+                            value == null ? 'Role cannot be empty' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        child: Text(isEditMode ? 'Save' : 'Add'),
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final hrdController = context
+                                .read<UserController>();
+                            if (isEditMode) {
+                              await hrdController.updateUser(
+                                userToEdit: userToEdit,
+                                username: usernameController.text,
+                                password: passwordController.text,
+                                name: nameController.text,
+                                role: selectedRole!,
+                                salary: double.parse(salaryController.text),
+                              );
+                            } else {
+                              await hrdController.addUser(
+                                username: usernameController.text,
+                                password: passwordController.text,
+                                name: nameController.text,
+                                role: selectedRole!,
+                                salary: double.parse(salaryController.text),
+                              );
+                            }
+                            final status = isEditMode
+                                ? InfoStatus.updated
+                                : InfoStatus.created;
+                            if (!mounted) return;
+                            Navigator.pop(context);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'User data ${isEditMode ? 'updated' : 'added'}.',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                                backgroundColor: _infoStatusHelper
+                                    .getInfoStatusColor(status),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+  // #endregion
+
+  // #region delete user
+  void _handleDeleteUser(User user) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Delete User'),
+          content: Text('Are you sure you want to delete ${user.name}?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            TextButton(
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  color: _infoStatusHelper.getInfoStatusColor(
+                    InfoStatus.deleted,
+                  ),
+                ),
+              ),
+              onPressed: () async {
+                final hrdController = context.read<UserController>();
+                await hrdController.deleteUser(user);
+
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('User ${user.name} has been deleted.'),
+                    backgroundColor: _infoStatusHelper.getInfoStatusColor(
+                      InfoStatus.deleted,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // #endregion
+
+  // #region clear data
+  void _showClearDataConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Clear App Data'),
+          content: Text(
+            'Are you sure you want to clear all app data? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            TextButton(
+              child: Text(
+                'Clear Data',
+                style: TextStyle(
+                  color: _infoStatusHelper.getInfoStatusColor(
+                    InfoStatus.deleted,
+                  ),
+                ),
+              ),
+              onPressed: () async {
+                final hrdController = context.read<UserController>();
+                await hrdController.clearAllData();
+
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('All app data has been cleared.'),
+                    backgroundColor: _infoStatusHelper.getInfoStatusColor(
+                      InfoStatus.deleted,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // #endregion
 }
