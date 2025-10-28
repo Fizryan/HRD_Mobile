@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrd_system_project/controllers/log_c.dart';
 import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
@@ -34,8 +35,8 @@ class _AdminPanelState extends State<AdminPanel>
   // #region build
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserController>(
-      builder: (context, hrdController, child) {
+    return Consumer2<UserController, LogController>(
+      builder: (context, hrdController, logController, child) {
         return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -84,7 +85,7 @@ class _AdminPanelState extends State<AdminPanel>
                             controller: _tabController,
                             children: [
                               _buildUserManagement(hrdController),
-                              _buildActivityLogs(hrdController.employeeList),
+                              _buildActivityLogs(logController),
                               _buildSystemManagement(),
                             ],
                           ),
@@ -265,95 +266,25 @@ class _AdminPanelState extends State<AdminPanel>
   // #endregion
 
   // #region activity logs
-  Widget _buildActivityLogs(List<User> filteredUsers) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-          child: Row(
-            children: [
-              const Text(
-                'Activity Logs',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.filter_alt_outlined, size: 16),
-                label: const Text('Filter'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: ColorUser().getColor(widget.user.role),
-                ),
-              ),
-            ],
+  Widget _buildActivityLogs(LogController logController) {
+    return ListView.builder(
+      itemCount: logController.logEntries.length,
+      itemBuilder: (context, index) {
+        final log = logController.logEntries[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Card(
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[300]!, width: 1),
-            ),
-            child: SingleChildScrollView(
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.resolveWith<Color?>(
-                  (Set<WidgetState> states) => Colors.grey[50],
-                ),
-                columns: const [
-                  DataColumn(
-                    label: Text(
-                      'Time',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'User',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-                rows: [
-                  if (filteredUsers.isNotEmpty)
-                    for (var i = 0; i < 5; i++)
-                      DataRow(
-                        cells: [
-                          DataCell(
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  CurrentDate.getTime(),
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                ),
-                                Text(
-                                  CurrentDate.getDate(),
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              filteredUsers[CurrentRandom.getIntRandom(
-                                    0,
-                                    filteredUsers.length - 1,
-                                  )]
-                                  .name,
-                            ),
-                          ),
-                        ],
-                      ),
-                ],
-              ),
-            ),
+          child: ListTile(
+            leading: Icon(Icons.history, color: ColorUser().getColor(widget.user.role)),
+            title: Text(log.details),
+            subtitle: Text('${log.actor} at ${log.timestamp}'),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
   // #endregion
@@ -544,8 +475,7 @@ class _AdminPanelState extends State<AdminPanel>
                         child: Text(isEditMode ? 'Save' : 'Add'),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final hrdController = context
-                                .read<UserController>();
+                            final hrdController = context.read<UserController>();
                             if (isEditMode) {
                               await hrdController.updateUser(
                                 userToEdit: userToEdit,
@@ -554,6 +484,7 @@ class _AdminPanelState extends State<AdminPanel>
                                 name: nameController.text,
                                 role: selectedRole!,
                                 salary: double.parse(salaryController.text),
+                                actorName: widget.user.name,
                               );
                             } else {
                               await hrdController.addUser(
@@ -562,6 +493,7 @@ class _AdminPanelState extends State<AdminPanel>
                                 name: nameController.text,
                                 role: selectedRole!,
                                 salary: double.parse(salaryController.text),
+                                actorName: widget.user.name,
                               );
                             }
                             final status = isEditMode
@@ -621,7 +553,7 @@ class _AdminPanelState extends State<AdminPanel>
               ),
               onPressed: () async {
                 final hrdController = context.read<UserController>();
-                await hrdController.deleteUser(user);
+                await hrdController.deleteUser(user, widget.user.name);
 
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
@@ -669,7 +601,7 @@ class _AdminPanelState extends State<AdminPanel>
               ),
               onPressed: () async {
                 final hrdController = context.read<UserController>();
-                await hrdController.clearAllData();
+                await hrdController.clearAllData(widget.user.name);
 
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();

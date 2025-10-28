@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrd_system_project/controllers/log_c.dart';
 import 'package:hrd_system_project/controllers/login_c.dart';
 import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/models/status_m.dart';
@@ -18,7 +19,11 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => LoginControl()),
-        ChangeNotifierProvider(create: (context) => UserController()),
+        ChangeNotifierProvider(create: (context) => LogController()),
+        ChangeNotifierProxyProvider<LogController, UserController>(
+          create: (context) => UserController(Provider.of<LogController>(context, listen: false)),
+          update: (context, logController, userController) => UserController(logController),
+        ),
       ],
       child: MaterialApp(
         title: 'HRD System',

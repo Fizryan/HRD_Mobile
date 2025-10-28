@@ -485,6 +485,7 @@ class _HrdPanelState extends State<HrdPanel>
                                 name: nameController.text,
                                 role: selectedRole!,
                                 salary: double.parse(salaryController.text),
+                                actorName: widget.user.name,
                               );
                             } else {
                               await hrdController.addUser(
@@ -493,6 +494,7 @@ class _HrdPanelState extends State<HrdPanel>
                                 name: nameController.text,
                                 role: selectedRole!,
                                 salary: double.parse(salaryController.text),
+                                actorName: widget.user.name,
                               );
                             }
                             final status = isEditMode
@@ -683,7 +685,7 @@ Role: ${employee.role.name}''',
               ),
               onPressed: () async {
                 final hrdController = context.read<UserController>();
-                await hrdController.deleteUser(user);
+                await hrdController.deleteUser(user, widget.user.name);
 
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
