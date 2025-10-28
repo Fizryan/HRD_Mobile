@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/data/user_data.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 
-class HrdController extends ChangeNotifier {
+class UserController extends ChangeNotifier {
   List<User> _employeeList = [];
   List<User> get employeeList => _employeeList;
 
-  HrdController() {
+  UserController() {
     _loadEmployee();
   }
 

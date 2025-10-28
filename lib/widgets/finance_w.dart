@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hrd_system_project/controllers/hrd_c.dart';
+import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/data/user_requests_data.dart';
@@ -29,7 +29,7 @@ class _FinancePanelState extends State<FinancePanel>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _loadPendingRequests();
   }
 
@@ -64,7 +64,7 @@ class _FinancePanelState extends State<FinancePanel>
   @override
   Widget build(BuildContext context) {
     String currentDate = CurrentDate.getDate();
-    final hrdController = context.watch<HrdController>();
+    final hrdController = context.watch<UserController>();
 
     return Column(
       children: [
@@ -103,50 +103,49 @@ class _FinancePanelState extends State<FinancePanel>
   }
 
   Widget _buildSummaryManagement(List<User> users, String currentDate) {
-    return Expanded(
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.resolveWith<Color?>((
-                Set<WidgetState> states,
-              ) {
-                return ColorUser().getColor(widget.user.role);
-              }),
-              columns: const [
-                DataColumn(
-                  label: Text(
-                    'Name',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+          scrollDirection: Axis.vertical,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.resolveWith<Color?>((
+              Set<WidgetState> states,
+            ) {
+              return ColorUser().getColor(widget.user.role);
+            }),
+            columns: const [
+              DataColumn(
+                label: Text(
+                  'Name',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                DataColumn(
-                  label: Text(
-                    'Date',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Date',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                DataColumn(
-                  label: Text(
-                    'Amount',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Amount',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ],
-              rows: users.map((user) {
-                return DataRow(
-                  cells: [
-                    DataCell(Row(children: [Text(user.name)])),
-                    DataCell(Text(currentDate)),
-                    DataCell(Text('Rp.${user.salary.toStringAsFixed(0)}')),
-                  ],
-                );
-              }).toList(),
-            ),
+              ),
+            ],
+            rows: users.map((user) {
+              return DataRow(
+                cells: [
+                  DataCell(Row(children: [Text(user.name)])),
+                  DataCell(Text(currentDate)),
+                  DataCell(Text('Rp.${user.salary.toStringAsFixed(0)}')),
+                ],
+              );
+            }).toList(),
           ),
         ),
       ),

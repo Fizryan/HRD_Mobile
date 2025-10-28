@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hrd_system_project/controllers/hrd_c.dart';
+import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/models/user_m.dart';
@@ -13,7 +13,8 @@ class AdminPanel extends StatefulWidget {
   State<AdminPanel> createState() => _AdminPanelState();
 }
 
-class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateMixin {
+class _AdminPanelState extends State<AdminPanel>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -30,7 +31,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HrdController>(
+    return Consumer<UserController>(
       builder: (context, hrdController, child) {
         return SingleChildScrollView(
           child: Padding(
@@ -60,7 +61,9 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
                         TabBar(
                           controller: _tabController,
                           labelColor: ColorUser().getColor(widget.user.role),
-                          indicatorColor: ColorUser().getColor(widget.user.role),
+                          indicatorColor: ColorUser().getColor(
+                            widget.user.role,
+                          ),
                           unselectedLabelColor: Colors.grey,
                           tabs: [
                             Tab(
@@ -79,7 +82,9 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
                             children: [
                               _buildUserManagement(hrdController.employeeList),
                               _buildActivityLogs(hrdController.employeeList),
-                              GeneralWidget().buildSystemInfo(systemInfoChildrens),
+                              GeneralWidget().buildSystemInfo(
+                                systemInfoChildrens,
+                              ),
                             ],
                           ),
                         ),
@@ -96,26 +101,26 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
   }
 
   List<Widget> headerChildrens(int totalUsers) => <Widget>[
-        Expanded(
-          child: _buildStatItem(
-            'Total Users',
-            totalUsers.toString(),
-            Icons.people,
-            Colors.blue,
-          ),
-        ),
-        Expanded(
-          child: _buildStatItem('Active User', '12', Icons.today, Colors.green),
-        ),
-        Expanded(
-          child: _buildStatItem(
-            'System Status',
-            'Normal',
-            Icons.check_circle,
-            Colors.blue,
-          ),
-        ),
-      ];
+    Expanded(
+      child: _buildStatItem(
+        'Total Users',
+        totalUsers.toString(),
+        Icons.people,
+        Colors.blue,
+      ),
+    ),
+    Expanded(
+      child: _buildStatItem('Active User', '12', Icons.today, Colors.green),
+    ),
+    Expanded(
+      child: _buildStatItem(
+        'System Status',
+        'Normal',
+        Icons.check_circle,
+        Colors.blue,
+      ),
+    ),
+  ];
 
   Widget _buildStatItem(
     String title,
@@ -137,9 +142,9 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
         Text(
           title,
@@ -333,9 +338,9 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
                           DataCell(
                             Text(
                               filteredUsers[CurrentRandom.getIntRandom(
-                                0,
-                                filteredUsers.length - 1,
-                              )]
+                                    0,
+                                    filteredUsers.length - 1,
+                                  )]
                                   .name,
                             ),
                           ),
@@ -351,33 +356,33 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
   }
 
   List<Widget> get systemInfoChildrens => <Widget>[
-        GeneralWidget().buildInfoCard(
-          'Server Status',
-          'Online',
-          Icons.cloud,
-          Colors.green,
-          context,
-        ),
-        GeneralWidget().buildInfoCard(
-          'Database Status',
-          '${CurrentRandom.getIntRandom(5, 45)}%',
-          Icons.storage,
-          Colors.blue,
-          context,
-        ),
-        GeneralWidget().buildInfoCard(
-          'Memory Usage',
-          '${CurrentRandom.getIntRandom(7, 70)}%',
-          Icons.memory,
-          Colors.orange,
-          context,
-        ),
-        GeneralWidget().buildInfoCard(
-          'CPU Load',
-          '${CurrentRandom.getIntRandom(4, 75)}%',
-          Icons.speed,
-          Colors.purple,
-          context,
-        ),
-      ];
+    GeneralWidget().buildInfoCard(
+      'Server Status',
+      'Online',
+      Icons.cloud,
+      Colors.green,
+      context,
+    ),
+    GeneralWidget().buildInfoCard(
+      'Database Status',
+      '${CurrentRandom.getIntRandom(5, 45)}%',
+      Icons.storage,
+      Colors.blue,
+      context,
+    ),
+    GeneralWidget().buildInfoCard(
+      'Memory Usage',
+      '${CurrentRandom.getIntRandom(7, 70)}%',
+      Icons.memory,
+      Colors.orange,
+      context,
+    ),
+    GeneralWidget().buildInfoCard(
+      'CPU Load',
+      '${CurrentRandom.getIntRandom(4, 75)}%',
+      Icons.speed,
+      Colors.purple,
+      context,
+    ),
+  ];
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hrd_system_project/controllers/hrd_c.dart';
+import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/data/user_requests_data.dart';
@@ -63,7 +63,7 @@ class _HrdPanelState extends State<HrdPanel>
 
   @override
   Widget build(BuildContext context) {
-    final hrdController = context.watch<HrdController>();
+    final hrdController = context.watch<UserController>();
     int currentEmployee = hrdController.employeeList.length;
     String currentDate = CurrentDate.getDate();
 
@@ -537,7 +537,8 @@ class _HrdPanelState extends State<HrdPanel>
                         child: Text(isEditMode ? 'Simpan' : 'Tambah'),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final hrdController = context.read<HrdController>();
+                            final hrdController = context
+                                .read<UserController>();
                             if (isEditMode) {
                               await hrdController.updateUser(
                                 userToEdit: userToEdit,
@@ -588,7 +589,7 @@ class _HrdPanelState extends State<HrdPanel>
     );
   }
 
-  Widget _buildEmployeeTab(HrdController hrdController) {
+  Widget _buildEmployeeTab(UserController hrdController) {
     return Scaffold(
       body: _buildEmployeeList(hrdController),
       floatingActionButton: widget.user.role == UserRole.admin
@@ -602,7 +603,7 @@ class _HrdPanelState extends State<HrdPanel>
     );
   }
 
-  Widget _buildEmployeeList(HrdController hrdController) {
+  Widget _buildEmployeeList(UserController hrdController) {
     final employeeList = hrdController.employeeList
         .where((user) => user.role != UserRole.admin)
         .toList();
@@ -731,7 +732,7 @@ class _HrdPanelState extends State<HrdPanel>
                 ),
               ),
               onPressed: () async {
-                final hrdController = context.read<HrdController>();
+                final hrdController = context.read<UserController>();
                 await hrdController.deleteUser(user);
 
                 if (!dialogContext.mounted) return;
