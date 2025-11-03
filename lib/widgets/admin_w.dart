@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/log_c.dart';
 import 'package:hrd_system_project/controllers/user_data_c.dart';
-import 'package:hrd_system_project/controllers/variable.dart';
 import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
@@ -279,7 +278,10 @@ class _AdminPanelState extends State<AdminPanel>
             side: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           child: ListTile(
-            leading: Icon(Icons.history, color: ColorUser().getColor(widget.user.role)),
+            leading: Icon(
+              Icons.history,
+              color: ColorUser().getColor(widget.user.role),
+            ),
             title: Text(log.details),
             subtitle: Text('${log.actor} at ${log.timestamp}'),
           ),
@@ -297,21 +299,24 @@ class _AdminPanelState extends State<AdminPanel>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'System Info',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ElevatedButton.icon(
+              onPressed: _showResetApprovalConfirmationDialog,
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('Reset Approval'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
             ),
-            const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1,
-              physics: const NeverScrollableScrollPhysics(),
-              children: systemInfoChildrens,
+            ElevatedButton.icon(
+              onPressed: _showClearLogConfirmationDialog,
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('Clear Log'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.white,
+              ),
             ),
-            const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _showClearDataConfirmationDialog,
               icon: const Icon(Icons.delete_forever),
@@ -326,39 +331,6 @@ class _AdminPanelState extends State<AdminPanel>
       ),
     );
   }
-  // #endregion
-
-  // #region system info
-  List<Widget> get systemInfoChildrens => <Widget>[
-    GeneralWidget().buildInfoCard(
-      'Server Status',
-      'Online',
-      Icons.cloud,
-      Colors.green,
-      context,
-    ),
-    GeneralWidget().buildInfoCard(
-      'Database Status',
-      '${CurrentRandom.getIntRandom(5, 45)}%',
-      Icons.storage,
-      Colors.blue,
-      context,
-    ),
-    GeneralWidget().buildInfoCard(
-      'Memory Usage',
-      '${CurrentRandom.getIntRandom(7, 70)}%',
-      Icons.memory,
-      Colors.orange,
-      context,
-    ),
-    GeneralWidget().buildInfoCard(
-      'CPU Load',
-      '${CurrentRandom.getIntRandom(4, 75)}%',
-      Icons.speed,
-      Colors.purple,
-      context,
-    ),
-  ];
   // #endregion
 
   // #region user form
@@ -475,7 +447,8 @@ class _AdminPanelState extends State<AdminPanel>
                         child: Text(isEditMode ? 'Save' : 'Add'),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final hrdController = context.read<UserController>();
+                            final hrdController = context
+                                .read<UserController>();
                             if (isEditMode) {
                               await hrdController.updateUser(
                                 userToEdit: userToEdit,
@@ -608,7 +581,10 @@ class _AdminPanelState extends State<AdminPanel>
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('All app data has been cleared.'),
+                    content: Text(
+                      'All app data has been cleared.',
+                      textAlign: TextAlign.center,
+                    ),
                     backgroundColor: _infoStatusHelper.getInfoStatusColor(
                       InfoStatus.deleted,
                     ),
@@ -621,5 +597,101 @@ class _AdminPanelState extends State<AdminPanel>
       },
     );
   }
+
+  void _showClearLogConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Clear Log Data'),
+          content: Text(
+            'Are you sure you want to clear all log data? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            TextButton(
+              child: Text(
+                'Clear Log',
+                style: TextStyle(
+                  color: _infoStatusHelper.getInfoStatusColor(
+                    InfoStatus.deleted,
+                  ),
+                ),
+              ),
+              onPressed: () async {
+                final logController = context.read<LogController>();
+                await logController.clearLogs();
+
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'All log has been cleared.',
+                      textAlign: TextAlign.center,
+                    ),
+                    backgroundColor: _infoStatusHelper.getInfoStatusColor(
+                      InfoStatus.warning,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showResetApprovalConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Reset Approval Data'),
+          content: Text(
+            'Are you sure you want to clear all log data? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            TextButton(
+              child: Text(
+                'Reset Approval',
+                style: TextStyle(
+                  color: _infoStatusHelper.getInfoStatusColor(
+                    InfoStatus.deleted,
+                  ),
+                ),
+              ),
+              onPressed: () async {
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'All approval has been reset.',
+                      textAlign: TextAlign.center,
+                    ),
+                    backgroundColor: _infoStatusHelper.getInfoStatusColor(
+                      InfoStatus.updated,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // #endregion
 }

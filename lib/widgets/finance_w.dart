@@ -30,7 +30,7 @@ class _FinancePanelState extends State<FinancePanel>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadPendingRequests();
   }
 
@@ -43,10 +43,7 @@ class _FinancePanelState extends State<FinancePanel>
           _pendingRequests = requests
               .where(
                 (req) =>
-                    (req.role == UserRole.employee ||
-                        req.role == UserRole.supervisor ||
-                        req.role == UserRole.finance ||
-                        req.role == UserRole.admin) &&
+                    req.role != UserRole.unknown &&
                     req.type == RequestType.claimReimbursment,
               )
               .toList();
@@ -87,6 +84,7 @@ class _FinancePanelState extends State<FinancePanel>
           unselectedLabelColor: Colors.grey,
           tabs: const [
             Tab(text: 'Summary'),
+            Tab(text: 'Table'),
             Tab(text: 'Approval'),
           ],
         ),
@@ -95,6 +93,7 @@ class _FinancePanelState extends State<FinancePanel>
           child: TabBarView(
             controller: _tabController,
             children: [
+              _dashboardSummary(_tabController, hrdController),
               _buildSummaryManagement(hrdController.employeeList, currentDate),
               _buildApprovalList(),
             ],
@@ -106,6 +105,41 @@ class _FinancePanelState extends State<FinancePanel>
   // #endregion
 
   // #region summary
+  Widget _dashboardSummary(
+    TabController tabController,
+    UserController hrdController,
+  ) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...GeneralWidget().toDoInfoChildrens(
+              'Pengajuan Reimbursement',
+              'Pengajuan baru menunggu persetujuan Anda.',
+              _pendingRequests.length,
+              Icon(Icons.chevron_right),
+              widget.user,
+              tabController,
+              Icon(Icons.pending_actions, color: Colors.orange, size: 32),
+            ),
+            const SizedBox(height: 12),
+            ...GeneralWidget().toDoInfoChildrens(
+              'Tabel Finance',
+              'List Gaji Pegawai.',
+              hrdController.employeeList.length,
+              Icon(Icons.chevron_right),
+              widget.user,
+              tabController,
+              Icon(Icons.table_chart_rounded, color: Colors.orange, size: 32),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSummaryManagement(List<User> users, String currentDate) {
     return Card(
       elevation: 1,
@@ -188,11 +222,16 @@ class _FinancePanelState extends State<FinancePanel>
           itemCount: _pendingRequests.length,
           itemBuilder: (context, index) {
             final request = _pendingRequests[index];
-            return GeneralWidget().buildApprovalCard(widget.user, request, () {
-              _handleApproval(request, isApproved: true);
-            }, () {
-              _handleApproval(request, isApproved: false);
-            });
+            return GeneralWidget().buildApprovalCard(
+              widget.user,
+              request,
+              () {
+                _handleApproval(request, isApproved: true);
+              },
+              () {
+                _handleApproval(request, isApproved: false);
+              },
+            );
           },
         );
       },
@@ -242,5 +281,6 @@ class _FinancePanelState extends State<FinancePanel>
       ),
     );
   }
+
   // #endregion
 }

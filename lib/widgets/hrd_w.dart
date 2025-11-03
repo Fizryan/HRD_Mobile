@@ -163,6 +163,7 @@ class _HrdPanelState extends State<HrdPanel>
               Icon(Icons.chevron_right),
               widget.user,
               tabController,
+              Icon(Icons.pending_actions, color: Colors.orange, size: 32),
             ),
             const SizedBox(height: 24),
           ],
@@ -337,11 +338,16 @@ class _HrdPanelState extends State<HrdPanel>
           itemCount: _pendingRequests.length,
           itemBuilder: (context, index) {
             final request = _pendingRequests[index];
-            return GeneralWidget().buildApprovalCard(widget.user, request, () {
-              _handleApproval(request, isApproved: true);
-            }, () {
-              _handleApproval(request, isApproved: false);
-            });
+            return GeneralWidget().buildApprovalCard(
+              widget.user,
+              request,
+              () {
+                _handleApproval(request, isApproved: true);
+              },
+              () {
+                _handleApproval(request, isApproved: false);
+              },
+            );
           },
         );
       },
@@ -605,10 +611,8 @@ class _HrdPanelState extends State<HrdPanel>
           employee.name,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          '''Salary Rp.${employee.salary.toStringAsFixed(0)}
-Role: ${employee.role.name}''',
-        ),
+        subtitle: Text('''Salary Rp.${employee.salary.toStringAsFixed(0)}
+Role: ${employee.role.name}'''),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -635,8 +639,7 @@ Role: ${employee.role.name}''',
   void _handleApproval(
     ApprovalRequest request, {
     required bool isApproved,
-  }
-  ) async {
+  }) async {
     setState(() {
       request.status = isApproved
           ? ApprovalStatus.approved
@@ -705,5 +708,6 @@ Role: ${employee.role.name}''',
       },
     );
   }
+
   // #endregion
 }

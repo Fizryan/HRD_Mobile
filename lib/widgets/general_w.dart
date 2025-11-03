@@ -124,6 +124,7 @@ class GeneralWidget {
     Icon iconUser,
     User user,
     TabController tabController,
+    Icon iconList,
   ) => <Card>[
     Card(
       elevation: 4,
@@ -133,11 +134,7 @@ class GeneralWidget {
         side: BorderSide(color: Colors.orange.shade200),
       ),
       child: ListTile(
-        leading: const Icon(
-          Icons.pending_actions,
-          color: Colors.orange,
-          size: 32,
-        ),
+        leading: iconList,
         title: Text(titleText, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text("$randomInt, $subtitleText"),
         trailing: iconUser,
@@ -145,12 +142,24 @@ class GeneralWidget {
           if (titleText == "Pengajuan Cuti" && user.role == UserRole.hrd) {
             tabController.animateTo(1);
           }
+          if (titleText == "Pengajuan Reimbursement" &&
+              user.role == UserRole.finance) {
+            tabController.animateTo(2);
+          }
+          if (titleText == "Tabel Finance" && user.role == UserRole.finance) {
+            tabController.animateTo(1);
+          }
         },
       ),
     ),
   ];
 
-  Widget buildApprovalCard(User user, ApprovalRequest approvalRequest, Function onApprove, Function onDeny) {
+  Widget buildApprovalCard(
+    User user,
+    ApprovalRequest approvalRequest,
+    Function onApprove,
+    Function onDeny,
+  ) {
     final ApprovalStatusState statusHelper = ApprovalStatusState();
     String formattedAmount = 'N/A';
     if (approvalRequest.amount != null && approvalRequest.amount! > 0) {
@@ -170,10 +179,7 @@ class GeneralWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: ColorUser().getColor(user.role),
-          width: 1,
-        ),
+        side: BorderSide(color: ColorUser().getColor(user.role), width: 1),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),

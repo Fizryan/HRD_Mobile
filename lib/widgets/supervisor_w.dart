@@ -105,6 +105,7 @@ class _SupervisorPanelState extends State<SupervisorPanel>
               Icon(Icons.chevron_right),
               widget.user,
               _tabController,
+              Icon(Icons.pending_actions, color: Colors.orange, size: 32),
             ),
             const SizedBox(height: 24),
             Text(

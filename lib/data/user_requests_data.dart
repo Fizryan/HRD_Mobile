@@ -29,11 +29,18 @@ class UserRequestsData {
     }).toList();
   }
 
+  static Future<void> resetRequests() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyRequests);
+  }
+
   static Future<List<ApprovalRequest>> getPendingRequests() async {
     List<ApprovalRequest> requests = await loadRequests();
     if (requests.isEmpty) {
       List<User> userList = await UserList.getAllUsers();
-      userList = userList.where((user) => user.role == UserRole.employee).toList();
+      userList = userList
+          .where((user) => user.role == UserRole.employee)
+          .toList();
       requests = [
         ApprovalRequest(
           id: 1,
