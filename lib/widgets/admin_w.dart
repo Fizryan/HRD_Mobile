@@ -20,6 +20,7 @@ class _AdminPanelState extends State<AdminPanel>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final InfoStatusState _infoStatusHelper = InfoStatusState();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -138,6 +139,11 @@ class _AdminPanelState extends State<AdminPanel>
 
   // #region user management
   Widget _buildUserManagement(UserController hrdController) {
+    final filteredUsers = hrdController.employeeList.where((user) {
+      final nameLower = user.name.toLowerCase();
+      final searchLower = _searchQuery.toLowerCase();
+      return nameLower.contains(searchLower);
+    }).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -161,6 +167,24 @@ class _AdminPanelState extends State<AdminPanel>
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: TextField(
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+            decoration: InputDecoration(
+              labelText: 'Search Users',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         Expanded(
@@ -204,7 +228,7 @@ class _AdminPanelState extends State<AdminPanel>
                       ),
                     ),
                   ],
-                  rows: hrdController.employeeList.map((user) {
+                  rows: filteredUsers.map((user) {
                     return DataRow(
                       cells: [
                         DataCell(

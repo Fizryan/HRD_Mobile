@@ -26,6 +26,7 @@ class _FinancePanelState extends State<FinancePanel>
 
   late Future<List<ApprovalRequest>> _pendingRequestsFuture;
   List<ApprovalRequest> _pendingRequests = [];
+  double _salaryFilter = 0;
 
   @override
   void initState() {
@@ -141,50 +142,83 @@ class _FinancePanelState extends State<FinancePanel>
   }
 
   Widget _buildSummaryManagement(List<User> users, String currentDate) {
+    final filteredUsers = users.where((user) {
+      return user.salary >= _salaryFilter;
+    }).toList();
+
     return Card(
       elevation: 1,
       margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.resolveWith<Color?>((
-              Set<WidgetState> states,
-            ) {
-              return ColorUser().getColor(widget.user.role);
-            }),
-            columns: const [
-              DataColumn(
-                label: Text(
-                  'Name',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  'Date',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  'Amount',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-            rows: users.map((user) {
-              return DataRow(
-                cells: [
-                  DataCell(Row(children: [Text(user.name)])),
-                  DataCell(Text(currentDate)),
-                  DataCell(Text('Rp.${user.salary.toStringAsFixed(0)}')),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Text(
+                    'Filter by Salary: Rp.${_salaryFilter.toStringAsFixed(0)}',
+                  ),
+                  Slider(
+                    value: _salaryFilter,
+                    min: 0,
+                    max: 20000000,
+                    divisions: 100,
+                    label: 'Rp.${_salaryFilter.toStringAsFixed(0)}',
+                    onChanged: (value) {
+                      setState(() {
+                        _salaryFilter = value;
+                      });
+                    },
+                  ),
                 ],
-              );
-            }).toList(),
-          ),
+              ),
+            ),
+
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.resolveWith<Color?>((
+                    states,
+                  ) {
+                    return ColorUser().getColor(widget.user.role);
+                  }),
+                  columns: const [
+                    DataColumn(
+                      label: Text(
+                        'Name',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'Date',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'Amount',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                  rows: filteredUsers.map((user) {
+                    return DataRow(
+                      cells: [
+                        DataCell(Row(children: [Text(user.name)])),
+                        DataCell(Text(currentDate)),
+                        DataCell(Text('Rp.${user.salary.toStringAsFixed(0)}')),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -36,7 +36,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     final loginControl = context.watch<LoginControl>();
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade900,
+      backgroundColor: Colors.blue.shade900,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -117,6 +117,7 @@ class _LoginViewState extends State<LoginView> {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
+        errorStyle: const TextStyle(color: Colors.white),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -152,6 +153,7 @@ class _LoginViewState extends State<LoginView> {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
+        errorStyle: const TextStyle(color: Colors.white),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -169,7 +171,7 @@ class _LoginViewState extends State<LoginView> {
         child: Text(
           loginControl.errorMessage,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.red, fontSize: 14),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
       );
     }

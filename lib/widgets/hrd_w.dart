@@ -377,6 +377,7 @@ class _HrdPanelState extends State<HrdPanel>
       UserRole.employee,
       UserRole.supervisor,
       UserRole.finance,
+      UserRole.hrd,
     ];
 
     showModalBottomSheet(
@@ -432,6 +433,12 @@ class _HrdPanelState extends State<HrdPanel>
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: nameController,
+                        readOnly: (userToEdit?.name == widget.user.name)
+                            ? true
+                            : false,
+                        obscureText: (userToEdit?.name == widget.user.name)
+                            ? true
+                            : false,
                         decoration: const InputDecoration(
                           labelText: 'Name',
                           hintText: 'Enter name',
@@ -443,6 +450,12 @@ class _HrdPanelState extends State<HrdPanel>
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: salaryController,
+                        readOnly: (userToEdit?.name == widget.user.name)
+                            ? true
+                            : false,
+                        obscureText: (userToEdit?.name == widget.user.name)
+                            ? true
+                            : false,
                         decoration: const InputDecoration(
                           labelText: 'Salary',
                           hintText: 'Enter salary',
@@ -468,11 +481,14 @@ class _HrdPanelState extends State<HrdPanel>
                               );
                             })
                             .toList(),
-                        onChanged: (value) {
-                          setModalState(() {
-                            selectedRole = value;
-                          });
-                        },
+                        onChanged:
+                            (isEditMode && userToEdit.role == UserRole.hrd)
+                            ? null
+                            : (value) {
+                                setModalState(() {
+                                  selectedRole = value;
+                                });
+                              },
                         validator: (value) =>
                             value == null ? 'Role cannot be empty' : null,
                       ),
