@@ -70,7 +70,7 @@ class _FinancePanelState extends State<FinancePanel>
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Text(
-            "Berikut ringkasan aktivitas hari ini",
+            "The following is a summary of today's activities",
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Colors.grey[600],
               fontWeight: FontWeight.bold,
@@ -116,8 +116,8 @@ class _FinancePanelState extends State<FinancePanel>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ...GeneralWidget().toDoInfoChildrens(
-              'Pengajuan Reimbursement',
-              'Pengajuan baru menunggu persetujuan Anda.',
+              'Reimbursement Request',
+              'New submissions are waiting for your approval.',
               _pendingRequests.length,
               Icon(Icons.chevron_right),
               widget.user,
@@ -126,8 +126,8 @@ class _FinancePanelState extends State<FinancePanel>
             ),
             const SizedBox(height: 12),
             ...GeneralWidget().toDoInfoChildrens(
-              'Tabel Finance',
-              'List Gaji Pegawai.',
+              'Finance Table',
+              'Employee Salary List.',
               hrdController.employeeList.length,
               Icon(Icons.chevron_right),
               widget.user,
@@ -210,7 +210,7 @@ class _FinancePanelState extends State<FinancePanel>
                 _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
                 const SizedBox(height: 16),
                 const Text(
-                  'Tidak ada pengajuan pending',
+                  'No pending submissions',
                   style: TextStyle(fontSize: 18),
                 ),
               ],
@@ -256,7 +256,7 @@ class _FinancePanelState extends State<FinancePanel>
     if (!mounted) return;
     final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
     final message =
-        'Pengajuan dari ${request.name} telah ${isApproved ? 'disetujui' : 'ditolak'}';
+        'Submission from ${request.name} has been ${isApproved ? 'approved' : 'rejected'}';
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

@@ -139,14 +139,14 @@ class GeneralWidget {
         subtitle: Text("$randomInt, $subtitleText"),
         trailing: iconUser,
         onTap: () {
-          if (titleText == "Pengajuan Cuti" && user.role == UserRole.hrd) {
+          if (titleText == "Leave Request" && user.role == UserRole.hrd) {
             tabController.animateTo(1);
           }
-          if (titleText == "Pengajuan Reimbursement" &&
+          if (titleText == "Reimbursement Request" &&
               user.role == UserRole.finance) {
             tabController.animateTo(2);
           }
-          if (titleText == "Tabel Finance" && user.role == UserRole.finance) {
+          if (titleText == "Finance Table" && user.role == UserRole.finance) {
             tabController.animateTo(1);
           }
         },
@@ -167,9 +167,9 @@ class GeneralWidget {
     }
 
     String subtitleLine1 =
-        (approvalRequest.type != RequestType.claimReimbursment)
+        (approvalRequest.type == RequestType.claimReimbursment)
         ? '${approvalRequest.type.displayName} - $formattedAmount'
-        : '${approvalRequest.type.displayName} - ${approvalRequest.days} hari';
+        : '${approvalRequest.type.displayName} - ${approvalRequest.days} days';
 
     String date = approvalRequest.date;
     String reason = approvalRequest.reason;
@@ -219,12 +219,12 @@ class GeneralWidget {
             IconButton(
               icon: const Icon(Icons.close, color: Colors.red),
               onPressed: () => onDeny(),
-              tooltip: 'Tolak',
+              tooltip: 'Reject',
             ),
             IconButton(
               icon: const Icon(Icons.check, color: Colors.green),
               onPressed: () => onApprove(),
-              tooltip: 'Setujui',
+              tooltip: 'Approve',
             ),
           ],
         ),

@@ -99,8 +99,8 @@ class _SupervisorPanelState extends State<SupervisorPanel>
           children: [
             const SizedBox(height: 24),
             ...GeneralWidget().toDoInfoChildrens(
-              'Persetujuan Cuti & Dinas',
-              'Pengajuan baru menunggu persetujuan Anda.',
+              'Leave & Business Trip Approval',
+              'New submissions are waiting for your approval.',
               _pendingRequests.length,
               Icon(Icons.chevron_right),
               widget.user,
@@ -109,7 +109,7 @@ class _SupervisorPanelState extends State<SupervisorPanel>
             ),
             const SizedBox(height: 24),
             Text(
-              "Kinerja Tim Anda",
+              "Your Team's Performance",
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -252,7 +252,7 @@ class _SupervisorPanelState extends State<SupervisorPanel>
                 _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
                 const SizedBox(height: 16),
                 const Text(
-                  'Tidak ada pengajuan pending',
+                  'No pending submissions',
                   style: TextStyle(fontSize: 18),
                 ),
               ],
@@ -298,7 +298,7 @@ class _SupervisorPanelState extends State<SupervisorPanel>
     if (!mounted) return;
     final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
     final message =
-        'Pengajuan dari ${request.name} telah di ${status.name} oleh supervisor.';
+        'Submission from ${request.name} has been ${status.name} by supervisor.';
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

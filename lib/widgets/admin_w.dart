@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/log_c.dart';
 import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/data/user_color.dart';
+import 'package:hrd_system_project/models/log_m.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
+import 'package:hrd_system_project/data/user_requests_data.dart';
 import 'package:hrd_system_project/widgets/general_w.dart';
 import 'package:provider/provider.dart';
 
@@ -246,7 +248,7 @@ class _AdminPanelState extends State<AdminPanel>
                                   color: Colors.red[700],
                                 ),
                                 onPressed: () => _handleDeleteUser(user),
-                                tooltip: 'Hapus',
+                                tooltip: 'Delete',
                               ),
                             ],
                           ),
@@ -654,7 +656,7 @@ class _AdminPanelState extends State<AdminPanel>
         return AlertDialog(
           title: Text('Reset Approval Data'),
           content: Text(
-            'Are you sure you want to clear all log data? This action cannot be undone.',
+            'Are you sure you want to clear all approval data? This action cannot be undone.',
           ),
           actions: [
             TextButton(
@@ -671,6 +673,14 @@ class _AdminPanelState extends State<AdminPanel>
                 ),
               ),
               onPressed: () async {
+                final logController = context.read<LogController>();
+                await UserRequestsData.resetRequests();
+                await logController.addLog(
+                  widget.user.name,
+                  LogAction.clearData,
+                  'All approval data has been reset.',
+                );
+
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
                 if (!mounted) return;

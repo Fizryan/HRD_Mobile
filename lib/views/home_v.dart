@@ -59,7 +59,7 @@ class HomeView extends StatelessWidget {
       case UserRole.employee:
         throw UnimplementedError();
       case UserRole.unknown:
-        return const Text('Role tidak dikenali. Hubungi admin.');
+        return const Text('Unknown role. Please contact admin.');
     }
   }
 }

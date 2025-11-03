@@ -15,18 +15,18 @@ class CurrentDate {
     int month = random.nextInt(12) + 1;
     int year = random.nextInt(5) + 2020;
     final months = [
-      'Januari',
-      'Februari',
-      'Maret',
+      'January',
+      'February',
+      'March',
       'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
+      'May',
+      'June',
+      'July',
+      'August',
       'September',
-      'Oktober',
+      'October',
       'November',
-      'Desember',
+      'December',
     ];
     return '$day ${months[month - 1]} $year';
   }

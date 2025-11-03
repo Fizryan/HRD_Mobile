@@ -112,7 +112,7 @@ class _HrdPanelState extends State<HrdPanel>
             children: [
               const SizedBox(height: 4),
               Text(
-                "Berikut ringkasan aktivitas hari ini",
+                "The following is a summary of today's activities",
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -157,8 +157,8 @@ class _HrdPanelState extends State<HrdPanel>
             ),
             const SizedBox(height: 8),
             ...GeneralWidget().toDoInfoChildrens(
-              'Pengajuan Cuti',
-              'Pengajuan baru menunggu persetujuan Anda.',
+              'Leave Request',
+              'New submissions are waiting for your approval.',
               _pendingRequests.length,
               Icon(Icons.chevron_right),
               widget.user,
@@ -190,32 +190,32 @@ class _HrdPanelState extends State<HrdPanel>
           childAspectRatio: crossAxisCount == 2 ? 0.96 : 1,
           children: [
             _buildStatCard(
-              title: "Total Karyawan",
+              title: "Total Employees",
               value: currentEmployee.toString(),
               icon: Icons.people_outline,
               color: Colors.blue,
               change: currentDate,
             ),
             _buildStatCard(
-              title: "Cuti Pending",
+              title: "Pending Leave",
               value: _pendingRequests.length.toString(),
               icon: Icons.beach_access_outlined,
               color: Colors.orange,
-              change: "Butuh approval",
+              change: "Needs approval",
             ),
             _buildStatCard(
-              title: "Absensi Hari Ini",
+              title: "Today's Attendance",
               value: "${CurrentRandom.getIntRandom(75, 95)}%",
               icon: Icons.fact_check_outlined,
               color: Colors.green,
               change: CurrentDate.getTime(),
             ),
             _buildStatCard(
-              title: "Training Aktif",
+              title: "Active Training",
               value: CurrentRandom.getIntRandom(0, currentEmployee).toString(),
               icon: Icons.school_outlined,
               color: Colors.purple,
-              change: "$currentEmployee peserta",
+              change: "$currentEmployee participants",
             ),
           ],
         );
@@ -293,7 +293,7 @@ class _HrdPanelState extends State<HrdPanel>
             const SizedBox(height: 4),
             Text(
               title,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
@@ -326,7 +326,7 @@ class _HrdPanelState extends State<HrdPanel>
                 _statusHelper.getApprovalStatusIcon(ApprovalStatus.approved),
                 const SizedBox(height: 16),
                 const Text(
-                  'Tidak ada pengajuan pending',
+                  'No pending submissions',
                   style: TextStyle(fontSize: 18),
                 ),
               ],
@@ -400,7 +400,7 @@ class _HrdPanelState extends State<HrdPanel>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        isEditMode ? 'Edit Karyawan' : 'Tambah Karyawan',
+                        isEditMode ? 'Edit Employee' : 'Add Employee',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 16),
@@ -410,10 +410,10 @@ class _HrdPanelState extends State<HrdPanel>
                         readOnly: true,
                         decoration: const InputDecoration(
                           labelText: 'Username',
-                          hintText: 'Masukkan username',
+                          hintText: 'Enter username',
                         ),
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Username tidak boleh kosong'
+                            ? 'Username cannot be empty'
                             : null,
                       ),
                       const SizedBox(height: 16),
@@ -423,33 +423,33 @@ class _HrdPanelState extends State<HrdPanel>
                         readOnly: true,
                         decoration: const InputDecoration(
                           labelText: 'Password',
-                          hintText: 'Masukkan password',
+                          hintText: 'Enter password',
                         ),
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Password tidak boleh kosong'
+                            ? 'Password cannot be empty'
                             : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: nameController,
                         decoration: const InputDecoration(
-                          labelText: 'Nama',
-                          hintText: 'Masukkan nama',
+                          labelText: 'Name',
+                          hintText: 'Enter name',
                         ),
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Nama tidak boleh kosong'
+                            ? 'Name cannot be empty'
                             : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: salaryController,
                         decoration: const InputDecoration(
-                          labelText: 'Gaji',
-                          hintText: 'Masukkan gaji',
+                          labelText: 'Salary',
+                          hintText: 'Enter salary',
                         ),
                         keyboardType: TextInputType.number,
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Gaji tidak boleh kosong'
+                            ? 'Salary cannot be empty'
                             : null,
                       ),
                       const SizedBox(height: 16),
@@ -457,7 +457,7 @@ class _HrdPanelState extends State<HrdPanel>
                         initialValue: selectedRole,
                         decoration: const InputDecoration(
                           labelText: 'Role',
-                          hintText: 'Pilih role',
+                          hintText: 'Select role',
                         ),
                         items: UserRole.values
                             .where((role) => allowedRoles.contains(role))
@@ -474,11 +474,11 @@ class _HrdPanelState extends State<HrdPanel>
                           });
                         },
                         validator: (value) =>
-                            value == null ? 'Role tidak boleh kosong' : null,
+                            value == null ? 'Role cannot be empty' : null,
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        child: Text(isEditMode ? 'Simpan' : 'Tambah'),
+                        child: Text(isEditMode ? 'Save' : 'Add'),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
                             final hrdController = context
@@ -512,7 +512,7 @@ class _HrdPanelState extends State<HrdPanel>
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Data ${isEditMode ? 'diperbarui' : 'ditambahkan'}.',
+                                  'Data ${isEditMode ? 'updated' : 'added'}.',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                 ),
@@ -543,7 +543,7 @@ class _HrdPanelState extends State<HrdPanel>
       floatingActionButton: widget.user.role == UserRole.admin
           ? FloatingActionButton(
               onPressed: () => _showUserForm(),
-              tooltip: 'Tambah Karyawan',
+              tooltip: 'Add Employee',
               backgroundColor: ColorUser().getColor(widget.user.role),
               child: const Icon(Icons.add),
             )
@@ -564,10 +564,7 @@ class _HrdPanelState extends State<HrdPanel>
           children: [
             Icon(Icons.people_outline_outlined, size: 48, color: Colors.grey),
             SizedBox(height: 16),
-            Text(
-              'Tidak ada karyawan yang ditemukan',
-              style: TextStyle(fontSize: 18),
-            ),
+            Text('No employees found', style: TextStyle(fontSize: 18)),
           ],
         ),
       );
@@ -625,7 +622,7 @@ Role: ${employee.role.name}'''),
               IconButton(
                 icon: Icon(Icons.delete_outline, color: Colors.red[700]),
                 onPressed: () => _handleDeleteUser(employee),
-                tooltip: 'Hapus',
+                tooltip: 'Delete',
               ),
             ],
           ],
@@ -651,7 +648,7 @@ Role: ${employee.role.name}'''),
 
     if (!mounted) return;
     final status = isApproved ? InfoStatus.created : InfoStatus.deleted;
-    final message = 'Pengajuan dari ${request.name} telah $status.';
+    final message = 'Submission from ${request.name} has been $status.';
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -674,12 +671,12 @@ Role: ${employee.role.name}'''),
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Hapus Karyawan'),
-          content: Text('Anda yakin ingin menghapus ${user.name}?'),
+          title: Text('Delete Employee'),
+          content: Text('Are you sure you want to delete ${user.name}?'),
           actions: [
             TextButton(
               child: Text(
-                'Hapus',
+                'Delete',
                 style: TextStyle(
                   color: _infoStatusHelper.getInfoStatusColor(
                     InfoStatus.deleted,
@@ -695,7 +692,7 @@ Role: ${employee.role.name}'''),
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Karyawan ${user.name} telah dihapus.'),
+                    content: Text('Employee ${user.name} has been deleted.'),
                     backgroundColor: _infoStatusHelper.getInfoStatusColor(
                       InfoStatus.deleted,
                     ),

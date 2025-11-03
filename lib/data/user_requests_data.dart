@@ -49,7 +49,7 @@ class UserRequestsData {
           type: RequestType.cutiTahunan,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(1, 5),
-          reason: "Cuti tahunan untuk liburan keluarga.",
+          reason: "Annual leave for family vacation.",
         ),
         ApprovalRequest(
           id: 2,
@@ -58,7 +58,7 @@ class UserRequestsData {
           type: RequestType.izinSakit,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(1, 3),
-          reason: "Izin sakit karena demam tinggi.",
+          reason: "Sick leave due to high fever.",
         ),
         ApprovalRequest(
           id: 3,
@@ -67,7 +67,7 @@ class UserRequestsData {
           type: RequestType.businessTrip,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(2, 7),
-          reason: "Perjalanan dinas ke Jakarta untuk meeting.",
+          reason: "Business trip to Jakarta for a meeting.",
         ),
         ApprovalRequest(
           id: 4,
@@ -77,7 +77,7 @@ class UserRequestsData {
           date: CurrentDate.getDate(),
           days: 0,
           amount: CurrentRandom.getDoubleRandom(100000, 500000),
-          reason: "Klaim reimbursement biaya transportasi.",
+          reason: "Claim for transportation cost reimbursement.",
         ),
         ApprovalRequest(
           id: 5,
@@ -86,7 +86,7 @@ class UserRequestsData {
           type: RequestType.cutiTahunan,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(3, 7),
-          reason: "Cuti tahunan untuk keperluan pribadi.",
+          reason: "Annual leave for personal reasons.",
         ),
         ApprovalRequest(
           id: 6,
@@ -95,7 +95,7 @@ class UserRequestsData {
           type: RequestType.cutiTahunan,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(2, 5),
-          reason: "Cuti tahunan untuk menghadiri acara keluarga.",
+          reason: "Annual leave to attend a family event.",
         ),
         ApprovalRequest(
           id: 7,
@@ -104,7 +104,7 @@ class UserRequestsData {
           type: RequestType.izinSakit,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(1, 3),
-          reason: "Izin sakit karena flu berat.",
+          reason: "Sick leave due to severe flu.",
         ),
         ApprovalRequest(
           id: 8,
@@ -113,7 +113,7 @@ class UserRequestsData {
           type: RequestType.businessTrip,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(2, 4),
-          reason: "Perjalanan dinas ke Bandung untuk pelatihan internal.",
+          reason: "Business trip to Bandung for internal training.",
         ),
         ApprovalRequest(
           id: 9,
@@ -122,7 +122,7 @@ class UserRequestsData {
           type: RequestType.cutiTahunan,
           date: CurrentDate.getDate(),
           days: CurrentRandom.getIntRandom(7, 14),
-          reason: "Cuti melahirkan sesuai ketentuan HR.",
+          reason: "Maternity leave according to HR regulations.",
         ),
         ApprovalRequest(
           id: 10,
@@ -132,7 +132,7 @@ class UserRequestsData {
           date: CurrentDate.getDate(),
           days: 0,
           amount: CurrentRandom.getDoubleRandom(100000, 200000),
-          reason: "Klaim biaya transportasi dan makan saat tugas luar kota.",
+          reason: "Claim for transportation and meal costs during out-of-town assignments.",
         ),
       ];
       await saveRequests(requests);
