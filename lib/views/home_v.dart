@@ -1,65 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:hrd_system_project/controllers/home_c.dart';
 import 'package:hrd_system_project/controllers/login_c.dart';
-import 'package:hrd_system_project/data/user_color.dart';
 import 'package:hrd_system_project/models/user_m.dart';
-import 'package:hrd_system_project/widgets/admin_w.dart';
-import 'package:hrd_system_project/widgets/finance_w.dart';
-import 'package:hrd_system_project/widgets/hrd_w.dart';
-import 'package:hrd_system_project/widgets/supervisor_w.dart';
+import 'package:hrd_system_project/variables/color_data.dart';
 import 'package:provider/provider.dart';
 
+// #region home
 class HomeView extends StatelessWidget {
   final User user;
   const HomeView({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Dashboard ${user.role.name}"),
-        backgroundColor: ColorUser().getColor(user.role),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<LoginControl>().logout();
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hallo! ${user.name}',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+    return ChangeNotifierProvider(
+      create: (context) => HomeController()..init(user),
+      child: Consumer<HomeController>(
+        builder: (context, controller, child) {
+          final hasMenu = controller.menuItems.isNotEmpty;
+
+          return Scaffold(
+            backgroundColor: AppColor.background,
+
+            appBar: AppBar(
+              title: Text(
+                hasMenu
+                    ? controller.menuItems[controller.selectedIndex].label
+                    : 'No pages available',
+                style: TextStyle(
+                  color: UserColor.getTextColorByRole(user.role),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: UserColor.getColorByRole(user.role),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    Icons.logout,
+                    color: UserColor.getTextColorByRole(user.role),
+                  ),
+                  onPressed: () {
+                    context.read<LoginController>().logout();
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            _buildPanel(context, user),
-          ],
-        ),
+
+            body: hasMenu
+                ? controller.currentPage
+                : const Center(child: Text('No pages available')),
+
+            bottomNavigationBar: hasMenu
+                ? Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.5),
+                          spreadRadius: 5,
+                          blurRadius: 7,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: BottomNavigationBar(
+                      backgroundColor: AppColor.background,
+                      currentIndex: controller.selectedIndex,
+                      onTap: controller.onItemTapped,
+                      type: BottomNavigationBarType.fixed,
+                      selectedItemColor: UserColor.getColorByRole(
+                        user.role,
+                      ).withValues(alpha: 0.8),
+                      unselectedItemColor: Colors.grey,
+                      showUnselectedLabels: true,
+                      items: controller.menuItems.map((item) {
+                        return BottomNavigationBarItem(
+                          icon: Icon(item.icon),
+                          label: item.label,
+                        );
+                      }).toList(),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          );
+        },
       ),
     );
   }
-
-  Widget _buildPanel(BuildContext context, User user) {
-    switch (user.role) {
-      case UserRole.admin:
-        return AdminPanel(user: user);
-      case UserRole.supervisor:
-        return SupervisorPanel(user: user);
-      case UserRole.hrd:
-        return HrdPanel(user: user);
-      case UserRole.finance:
-        return FinancePanel(user: user);
-      case UserRole.employee:
-        throw UnimplementedError();
-      case UserRole.unknown:
-        return const Text('Unknown role. Please contact admin.');
-    }
-  }
 }
+
+// #endregion

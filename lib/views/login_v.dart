@@ -1,31 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/login_c.dart';
 import 'package:hrd_system_project/models/status_m.dart';
+import 'package:hrd_system_project/variables/color_data.dart';
+import 'package:hrd_system_project/views/general_v.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
+// #region login widget
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _LoginViewState createState() => _LoginViewState();
+  State<LoginView> createState() => _LoginViewState();
 }
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isPasswordObscured = true;
+
+  Timer? _errorTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<LoginController>().addListener(_onLoginStatusChanged);
+  }
 
   @override
   void dispose() {
+    _errorTimer?.cancel();
+    context.read<LoginController>().removeListener(_onLoginStatusChanged);
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _validateLogin(BuildContext context) {
+  void _onLoginStatusChanged() {
+    if (!mounted) return;
+
+    final controller = context.read<LoginController>();
+
+    _errorTimer?.cancel();
+
+    if (controller.status == LoginStatus.failed) {
+      _errorTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted) {
+          controller.resetStatus();
+        }
+      });
+    }
+  }
+
+  void _login(BuildContext context) {
+    FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
-      context.read<LoginControl>().login(
+      context.read<LoginController>().login(
         _usernameController.text,
         _passwordController.text,
       );
@@ -34,32 +65,78 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    final loginControl = context.watch<LoginControl>();
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: Colors.blue.shade900,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
-                _buildheader(context),
-                const SizedBox(height: 40),
-                _buildUsernameField(),
-                const SizedBox(height: 20),
-                _buildPasswordField(),
-                const SizedBox(height: 20),
-                _buildErrorMessage(loginControl),
-                _buildLoginButton(context, loginControl),
-                const SizedBox(height: 24),
-              ],
+      backgroundColor: AppColor.background,
+      body: Stack(
+        children: [
+          Positioned(
+            top: size.height * 0.2,
+            left: 0,
+            right: 0,
+            child: ClipPath(
+              clipper: BackgroundClipper(),
+              child: Container(
+                height: 350,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColor.firstLinear, AppColor.secondLinear],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          Positioned(
+            top: (size.height * 0.1) - 40,
+            left: 0,
+            right: 0,
+            child: const Text(
+              'HR-Connect',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColor.textColor,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.all(32),
+              margin: EdgeInsets.only(top: size.height * 0.25),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildheader(context),
+                    const SizedBox(height: 16),
+                    _buildUsernameField(),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(),
+                    const SizedBox(height: 16),
+                    Consumer<LoginController>(
+                      builder: (context, controller, child) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildErrorMessage(controller),
+                            _buildLoginButton(context, controller),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -68,13 +145,17 @@ class _LoginViewState extends State<LoginView> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.lock_person_outlined, size: 80, color: Colors.amber),
+        const Icon(
+          Icons.lock_person_outlined,
+          size: 80,
+          color: AppColor.textColor,
+        ),
         const SizedBox(height: 16),
         Text(
           'Welcome Back',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
+            color: AppColor.textColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -84,7 +165,7 @@ class _LoginViewState extends State<LoginView> {
           textAlign: TextAlign.center,
           style: Theme.of(
             context,
-          ).textTheme.bodyLarge?.copyWith(color: Colors.white),
+          ).textTheme.bodyLarge?.copyWith(color: AppColor.textColor),
         ),
       ],
     );
@@ -93,31 +174,31 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildUsernameField() {
     return TextFormField(
       controller: _usernameController,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: AppColor.textColor),
+      textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         labelText: 'Username',
-        labelStyle: const TextStyle(color: Colors.white, fontSize: 20),
+        labelStyle: const TextStyle(color: AppColor.textColor, fontSize: 14),
         prefixIcon: const Icon(
           Icons.person_outline_rounded,
-          color: Colors.amber,
+          color: AppColor.textColor,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColor.textColor.withValues(alpha: 0.5),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.amber, width: 2),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.white, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColor.textColor, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: StatusColor.errorColor, width: 2),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        errorStyle: const TextStyle(color: Colors.white),
+        errorStyle: const TextStyle(color: AppColor.textColor, fontSize: 12),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -131,29 +212,45 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
-      style: const TextStyle(color: Colors.white),
-      obscureText: true,
+      style: const TextStyle(color: AppColor.textColor),
+      obscureText: _isPasswordObscured,
+      obscuringCharacter: '*',
+      textInputAction: TextInputAction.done,
+      onFieldSubmitted: (value) => _login(context),
       decoration: InputDecoration(
         labelText: 'Password',
-        labelStyle: const TextStyle(color: Colors.white, fontSize: 20),
-        prefixIcon: const Icon(Icons.lock_open_outlined, color: Colors.amber),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.amber, width: 2),
+        labelStyle: const TextStyle(color: AppColor.textColor, fontSize: 14),
+        prefixIcon: const Icon(
+          Icons.lock_open_outlined,
+          color: AppColor.textColor,
         ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+            color: AppColor.textColor,
+          ),
+          onPressed: () {
+            setState(() {
+              _isPasswordObscured = !_isPasswordObscured;
+            });
+          },
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.white, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColor.textColor.withValues(alpha: 0.5),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColor.textColor, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: StatusColor.errorColor, width: 2),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        errorStyle: const TextStyle(color: Colors.white),
+        errorStyle: const TextStyle(color: AppColor.textColor, fontSize: 12),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -164,39 +261,75 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  Widget _buildErrorMessage(LoginControl loginControl) {
-    if (loginControl.loginStatus == LoginStatus.failed) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Text(
-          loginControl.errorMessage,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
-        ),
-      );
+  Widget _buildErrorMessage(LoginController loginController) {
+    String message = '';
+    Color color = Colors.transparent;
+
+    if (loginController.status == LoginStatus.failed) {
+      message = loginController.errorMessage;
+      color = Colors.red;
     }
-    return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: color, fontSize: 14),
+      ),
+    );
   }
 
-  Widget _buildLoginButton(BuildContext context, LoginControl loginControl) {
+  Widget _buildLoginButton(
+    BuildContext context,
+    LoginController loginController,
+  ) {
+    final childContent = loginController.status == LoginStatus.loading
+        ? const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(
+              color: AppColor.background,
+              strokeWidth: 3,
+            ),
+          )
+        : const Text(
+            'Login',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColor.background,
+            ),
+          );
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        elevation: 0,
       ),
-      onPressed: loginControl.loginStatus == LoginStatus.loading
+      onPressed: loginController.status == LoginStatus.loading
           ? null
-          : () {
-              _validateLogin(context);
-            },
-      child: loginControl.loginStatus == LoginStatus.loading
-          ? const SizedBox()
-          : const Text(
-              'Login',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+          : () => _login(context),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF007BFF), Color(0xFF0056B3)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          alignment: Alignment.center,
+          child: childContent,
+        ),
+      ),
     );
   }
 }
+
+// #endregion

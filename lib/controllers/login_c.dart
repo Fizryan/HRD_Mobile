@@ -1,44 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:collection/collection.dart';
-import 'package:hrd_system_project/data/user_data.dart';
+import 'package:hrd_system_project/controllers/user_c.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 
-class LoginControl extends ChangeNotifier {
-  LoginStatus _loginStatus = LoginStatus.initial;
-  String _errorMessage = '';
-  User? _loggedInUser;
+// #region login controller
+class LoginController extends ChangeNotifier {
+  LoginStatus _status = LoginStatus.initial;
+  LoginStatus get status => _status;
 
-  LoginStatus get loginStatus => _loginStatus;
+  String _errorMessage = '';
   String get errorMessage => _errorMessage;
+
+  User? _loggedInUser;
   User? get loggedInUser => _loggedInUser;
 
   Future<void> login(String username, String password) async {
-    _loginStatus = LoginStatus.loading;
+    _status = LoginStatus.loading;
     _errorMessage = '';
     notifyListeners();
 
-    final users = await UserList.getAllUsers();
-
-    final userFound = users.firstWhereOrNull(
-      (user) => user.username == username && user.password == password,
-    );
-
-    if (userFound != null) {
-      _loginStatus = LoginStatus.success;
-      _loggedInUser = userFound;
-    } else {
-      _loginStatus = LoginStatus.failed;
-      _errorMessage = 'Invalid username or password';
+    try {
+      final user = await UserService.getUser(username);
+      if (user == null || user.password != password) {
+        _status = LoginStatus.failed;
+        _errorMessage = 'Invalid username or password';
+      } else {
+        _status = LoginStatus.success;
+        _loggedInUser = user;
+      }
+    } catch (e) {
+      _status = LoginStatus.failed;
+      _errorMessage = e.toString();
+    } finally {
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   void logout() {
-    _loginStatus = LoginStatus.initial;
+    _status = LoginStatus.initial;
     _errorMessage = '';
     _loggedInUser = null;
     notifyListeners();
   }
+
+  void resetStatus() {
+    _status = LoginStatus.initial;
+    _errorMessage = '';
+    notifyListeners();
+  }
 }
+// #endregion

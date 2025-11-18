@@ -1,14 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:hrd_system_project/controllers/log_c.dart';
 import 'package:hrd_system_project/controllers/login_c.dart';
-import 'package:hrd_system_project/controllers/user_data_c.dart';
 import 'package:hrd_system_project/models/status_m.dart';
 import 'package:hrd_system_project/views/home_v.dart';
 import 'package:hrd_system_project/views/login_v.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hrd_system_project/controllers/user_c.dart';
+import 'package:hrd_system_project/models/user_m.dart';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+
+  if (!Hive.isAdapterRegistered(UserAdapter().typeId)) {
+    Hive.registerAdapter(UserAdapter());
+  }
+
+  if (!Hive.isAdapterRegistered(UserRoleAdapter().typeId)) {
+    Hive.registerAdapter(UserRoleAdapter());
+  }
+
+  if (!Hive.isBoxOpen('users')) {
+    await Hive.openBox<User>('users');
+  }
+
+  await UserService.seedUsers(dummyUsers);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()..loadUsers()),
+        ChangeNotifierProvider(create: (_) => LoginController()),
+      ],
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -16,27 +42,17 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => LoginControl()),
-        ChangeNotifierProvider(create: (context) => LogController()),
-        ChangeNotifierProxyProvider<LogController, UserController>(
-          create: (context) => UserController(Provider.of<LogController>(context, listen: false)),
-          update: (context, logController, userController) => UserController(logController),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'HRD System',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: Consumer<LoginControl>(
-          builder: (context, loginControl, child) {
-            if (loginControl.loginStatus == LoginStatus.success &&
-                loginControl.loggedInUser != null) {
-              return HomeView(user: loginControl.loggedInUser!);
-            }
-            return const LoginView();
-          },
-        ),
+    return MaterialApp(
+      title: 'HR-Connect',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: Consumer<LoginController>(
+        builder: (context, loginController, child) {
+          if (loginController.status == LoginStatus.success &&
+              loginController.loggedInUser != null) {
+            return HomeView(user: loginController.loggedInUser!);
+          }
+          return const LoginView();
+        },
       ),
     );
   }
