@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/models/menu_m.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/views/admin/admin_panel.dart';
+import 'package:hrd_system_project/views/admin/setting_panel.dart';
 import 'package:hrd_system_project/views/admin/user_management_v.dart';
 
 // #region menu config
@@ -19,6 +20,11 @@ class MenuConfig {
             label: 'User Management',
             icon: Icons.manage_accounts_outlined,
             page: UserManagementView(currentUser: user),
+          ),
+          NavigationItem(
+            label: 'Settings',
+            icon: Icons.settings,
+            page: SettingPanel(),
           ),
         ];
       case UserRole.supervisor:

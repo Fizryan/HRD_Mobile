@@ -13,13 +13,11 @@ class AdminPanel extends StatefulWidget {
 
 class _AdminPanelState extends State<AdminPanel>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
   late Future<List<User>> _usersFuture;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _refreshData();
   }
 
@@ -31,12 +29,6 @@ class _AdminPanelState extends State<AdminPanel>
 
   String _formatCurrency(double value) {
     return "Rp ${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -60,8 +52,6 @@ class _AdminPanelState extends State<AdminPanel>
               children: [
                 _buildHeader(theme),
                 const SizedBox(height: 20),
-                // _buildTabSelector(theme),
-                // const SizedBox(height: 20),
                 _buildFinancialSummary(users),
                 const SizedBox(height: 20),
                 Text(
@@ -89,6 +79,7 @@ class _AdminPanelState extends State<AdminPanel>
     );
   }
 
+  // #region header
   Widget _buildHeader(ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -97,7 +88,7 @@ class _AdminPanelState extends State<AdminPanel>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcom back',
+              'Welcome back',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: AppColor.textColor,
                 fontWeight: FontWeight.bold,
@@ -124,39 +115,15 @@ class _AdminPanelState extends State<AdminPanel>
         ),
         const CircleAvatar(
           radius: 24,
-          backgroundColor: Colors.blueAccent,
+          backgroundColor: AppColor.secondLinear,
           child: Icon(Icons.person_outline_rounded, color: Colors.white),
         ),
       ],
     );
   }
+  // #endregion
 
-  // Widget _buildTabSelector(ThemeData theme) {
-  //   return Container(
-  //     height: 45,
-  //     decoration: BoxDecoration(
-  //       color: AppColor.firstLinear,
-  //       borderRadius: BorderRadius.circular(20),
-  //     ),
-  //     child: TabBar(
-  //       controller: _tabController,
-  //       indicator: BoxDecoration(
-  //         borderRadius: BorderRadius.circular(20),
-  //         color: AppColor.secondLinear,
-  //       ),
-  //       indicatorSize: TabBarIndicatorSize.tab,
-  //       labelColor: AppColor.textColor,
-  //       unselectedLabelColor: AppColor.textColor.withValues(alpha: 0.5),
-  //       labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-  //       dividerColor: Colors.transparent,
-  //       tabs: [
-  //         Tab(text: 'Daily'),
-  //         Tab(text: 'Weekly'),
-  //       ],
-  //     ),
-  //   );
-  // }
-
+  // #region financial summary
   Widget _buildFinancialSummary(List<User> users) {
     double totalSalary = users.fold(0, (sum, item) => sum + item.salary);
     double averageSalary = users.isEmpty ? 0 : totalSalary / users.length;
@@ -180,7 +147,7 @@ class _AdminPanelState extends State<AdminPanel>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'Estimated Payroll (Monthly)',
@@ -204,11 +171,12 @@ class _AdminPanelState extends State<AdminPanel>
           ),
           const SizedBox(height: 8),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -223,7 +191,7 @@ class _AdminPanelState extends State<AdminPanel>
                     Text(
                       '${users.length} Active Staff',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColor.textColor,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -234,7 +202,7 @@ class _AdminPanelState extends State<AdminPanel>
               const SizedBox(width: 10),
               Text(
                 'Avg: ${_formatCurrency(averageSalary)}',
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                style: const TextStyle(color: AppColor.textColor, fontSize: 11),
               ),
             ],
           ),
@@ -242,7 +210,9 @@ class _AdminPanelState extends State<AdminPanel>
       ),
     );
   }
+  // #endregion
 
+  // #region stats
   Widget _buildStatsGrid(List<User> users) {
     final totalEmployees = users.length;
     final adminCount = users
@@ -264,7 +234,7 @@ class _AdminPanelState extends State<AdminPanel>
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       shrinkWrap: true,
-      childAspectRatio: 1.6,
+      childAspectRatio: 1.4,
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _DashboardCard(
@@ -312,7 +282,9 @@ class _AdminPanelState extends State<AdminPanel>
       ],
     );
   }
+  // #endregion
 
+  // #region userlist preview
   Widget _buildUserListPreview(List<User> users, ThemeData theme) {
     final recentUsers = users.take(5).toList();
     if (recentUsers.isEmpty) {
@@ -361,6 +333,8 @@ class _AdminPanelState extends State<AdminPanel>
       ),
     );
   }
+
+  // #endregion
 }
 
 class _DashboardCard extends StatelessWidget {
@@ -381,6 +355,7 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      clipBehavior: Clip.hardEdge,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -395,13 +370,14 @@ class _DashboardCard extends StatelessWidget {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 34),
+              Icon(icon, color: color, size: 24),
               if (subtitle != null)
                 Text(
                   subtitle!,
@@ -415,7 +391,7 @@ class _DashboardCard extends StatelessWidget {
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),

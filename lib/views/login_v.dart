@@ -55,6 +55,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _login(BuildContext context) {
     FocusScope.of(context).unfocus();
+    _usernameController.text = _usernameController.text.trim();
     if (_formKey.currentState?.validate() ?? false) {
       context.read<LoginController>().login(
         _usernameController.text,
@@ -179,6 +180,9 @@ class _LoginViewState extends State<LoginView> {
       decoration: InputDecoration(
         labelText: 'Username',
         labelStyle: const TextStyle(color: AppColor.textColor, fontSize: 14),
+        helperStyle: TextStyle(
+          color: AppColor.textColor.withValues(alpha: 0.7),
+        ),
         prefixIcon: const Icon(
           Icons.person_outline_rounded,
           color: AppColor.textColor,
