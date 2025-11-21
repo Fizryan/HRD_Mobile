@@ -21,29 +21,91 @@ class HomeView extends StatelessWidget {
           return Scaffold(
             backgroundColor: AppColor.background,
 
-            appBar: AppBar(
-              title: Text(
-                hasMenu
-                    ? controller.menuItems[controller.selectedIndex].label
-                    : 'No pages available',
-                style: TextStyle(
-                  color: UserColor.getTextColorByRole(user.role),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(70),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      UserColor.getColorByRole(user.role),
+                      UserColor.getColorByRole(
+                        user.role,
+                      ).withValues(alpha: 0.85),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: UserColor.getColorByRole(
+                        user.role,
+                      ).withValues(alpha: 0.3),
+                      spreadRadius: 0,
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: AppBar(
+                  title: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColor.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          hasMenu
+                              ? controller
+                                    .menuItems[controller.selectedIndex]
+                                    .icon
+                              : Icons.dashboard,
+                          color: AppColor.white,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          hasMenu
+                              ? controller
+                                    .menuItems[controller.selectedIndex]
+                                    .label
+                              : 'No pages available',
+                          style: const TextStyle(
+                            color: AppColor.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: AppColor.transparent,
+                  elevation: 0,
+                  actions: [
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: AppColor.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.logout_rounded,
+                          color: AppColor.white,
+                        ),
+                        onPressed: () {
+                          context.read<LoginController>().logout();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              backgroundColor: UserColor.getColorByRole(user.role),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    Icons.logout,
-                    color: UserColor.getTextColorByRole(user.role),
-                  ),
-                  onPressed: () {
-                    context.read<LoginController>().logout();
-                  },
-                ),
-              ],
             ),
 
             body: hasMenu
@@ -53,28 +115,55 @@ class HomeView extends StatelessWidget {
             bottomNavigationBar: hasMenu
                 ? Container(
                     decoration: BoxDecoration(
+                      color: AppColor.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.5),
-                          spreadRadius: 5,
-                          blurRadius: 7,
-                          offset: const Offset(0, 3),
+                          color: AppColor.black87.withValues(alpha: 0.06),
+                          spreadRadius: 0,
+                          blurRadius: 8,
+                          offset: const Offset(0, -2),
                         ),
                       ],
                     ),
                     child: BottomNavigationBar(
-                      backgroundColor: AppColor.background,
+                      backgroundColor: AppColor.white,
                       currentIndex: controller.selectedIndex,
                       onTap: controller.onItemTapped,
                       type: BottomNavigationBarType.fixed,
-                      selectedItemColor: UserColor.getColorByRole(
-                        user.role,
-                      ).withValues(alpha: 0.8),
-                      unselectedItemColor: Colors.grey,
+                      selectedItemColor: UserColor.getColorByRole(user.role),
+                      unselectedItemColor: AppColor.grey600,
                       showUnselectedLabels: true,
+                      selectedFontSize: 12,
+                      unselectedFontSize: 11,
+                      selectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                      ),
+                      elevation: 0,
                       items: controller.menuItems.map((item) {
+                        final isSelected =
+                            controller.menuItems.indexOf(item) ==
+                            controller.selectedIndex;
                         return BottomNavigationBarItem(
-                          icon: Icon(item.icon),
+                          icon: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(item.icon, size: 24),
+                              if (isSelected)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: UserColor.getColorByRole(user.role),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
+                          ),
                           label: item.label,
                         );
                       }).toList(),

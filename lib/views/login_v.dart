@@ -21,17 +21,19 @@ class _LoginViewState extends State<LoginView> {
   bool _isPasswordObscured = true;
 
   Timer? _errorTimer;
+  LoginController? _loginController;
 
   @override
   void initState() {
     super.initState();
-    context.read<LoginController>().addListener(_onLoginStatusChanged);
+    _loginController = context.read<LoginController>();
+    _loginController?.addListener(_onLoginStatusChanged);
   }
 
   @override
   void dispose() {
     _errorTimer?.cancel();
-    context.read<LoginController>().removeListener(_onLoginStatusChanged);
+    _loginController?.removeListener(_onLoginStatusChanged);
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -267,11 +269,11 @@ class _LoginViewState extends State<LoginView> {
 
   Widget _buildErrorMessage(LoginController loginController) {
     String message = '';
-    Color color = Colors.transparent;
+    Color color = AppColor.transparent;
 
     if (loginController.status == LoginStatus.failed) {
       message = loginController.errorMessage;
-      color = Colors.red;
+      color = StatusColor.errorColor;
     }
 
     return Padding(
@@ -310,8 +312,8 @@ class _LoginViewState extends State<LoginView> {
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
+        backgroundColor: AppColor.transparent,
+        shadowColor: AppColor.transparent,
         elevation: 0,
       ),
       onPressed: loginController.status == LoginStatus.loading
@@ -320,7 +322,7 @@ class _LoginViewState extends State<LoginView> {
       child: Ink(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF007BFF), Color(0xFF0056B3)],
+            colors: [AppColor.buttonPrimary, AppColor.buttonPrimaryDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
