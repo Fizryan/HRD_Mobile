@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/user_c.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/variables/color_data.dart';
+import 'package:hrd_system_project/views/general_v.dart';
 
 class AdminPanel extends StatefulWidget {
   final User user;
@@ -24,10 +25,6 @@ class _AdminPanelState extends State<AdminPanel> {
     setState(() {
       _usersFuture = UserService.getAllUsers();
     });
-  }
-
-  String _formatCurrency(double value) {
-    return "Rp ${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
   }
 
   @override
@@ -331,7 +328,7 @@ class _AdminPanelState extends State<AdminPanel> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  _formatCurrency(totalSalary),
+                  Utils.formatCurrency(totalSalary),
                   style: const TextStyle(
                     color: AppColor.white,
                     fontSize: 32,
@@ -408,7 +405,7 @@ class _AdminPanelState extends State<AdminPanel> {
                       child: _buildPayrollStat(
                         icon: Icons.payments_outlined,
                         label: 'Avg Salary',
-                        value: _formatCurrency(averageSalary),
+                        value: Utils.formatCurrency(averageSalary),
                         isCompact: true,
                       ),
                     ),
@@ -658,7 +655,7 @@ class _AdminPanelState extends State<AdminPanel> {
                     Icon(Icons.star, size: 14, color: AppColor.grey600),
                     const SizedBox(width: 2),
                     Text(
-                      _formatCurrency(u.salary),
+                      Utils.formatCurrency(u.salary),
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColor.grey600,

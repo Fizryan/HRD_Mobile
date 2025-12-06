@@ -50,3 +50,11 @@ class GeneralWidget {
   }
 }
 // #endregion
+
+// #region utils
+class Utils {
+  static String formatCurrency(double amount) {
+    return 'Rp ${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+\.)'), (Match m) => '${m[1]}.')}';
+  }
+}
+// #endregion

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/user_c.dart';
 import 'package:hrd_system_project/models/user_m.dart';
 import 'package:hrd_system_project/variables/color_data.dart';
+import 'package:hrd_system_project/views/general_v.dart';
 import 'package:provider/provider.dart';
 
 class UserManagementView extends StatefulWidget {
@@ -16,7 +17,6 @@ class UserManagementView extends StatefulWidget {
 class _UserManagementViewState extends State<UserManagementView> {
   String _searchQuery = '';
   late final TextEditingController _searchController;
-  static final _currencyRegex = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
 
   @override
   void initState() {
@@ -28,10 +28,6 @@ class _UserManagementViewState extends State<UserManagementView> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  String _formatCurrency(double value) {
-    return "Rp ${value.toStringAsFixed(0).replaceAllMapped(_currencyRegex, (Match m) => '${m[1]}.')}";
   }
 
   @override
@@ -78,39 +74,43 @@ class _UserManagementViewState extends State<UserManagementView> {
                             key: ValueKey(user.username),
                             user: user,
                             userProvider: userProvider,
-                            formatCurrency: _formatCurrency,
+                            formatCurrency: Utils.formatCurrency,
                             onEdit: () => _showAddEditUserDialog(
                               context,
                               Theme.of(context),
                               user,
                             ),
                             onDelete: () async {
+                              Navigator.of(context);
+                              final messenger = ScaffoldMessenger.of(context);
+
                               final confirmed = await _showConfirmDeleteDialog(
                                 context,
                                 user,
                               );
                               if (confirmed == true) {
-                                userProvider.deleteUser(user.username);
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.delete_forever,
-                                          color: AppColor.white,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text('User ${user.name} deleted'),
-                                      ],
+                                await userProvider.deleteUser(user.username);
+                                if (context.mounted) {
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.delete_forever,
+                                            color: AppColor.white,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text('User ${user.name} deleted'),
+                                        ],
+                                      ),
+                                      backgroundColor: AppColor.red,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                    backgroundColor: AppColor.red,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                );
+                                  );
+                                }
                               }
                             },
                           );
