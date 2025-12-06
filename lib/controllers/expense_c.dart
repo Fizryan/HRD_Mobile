@@ -140,7 +140,7 @@ final List<Expense> dummyExpenses = [
     title: 'Office Supplies',
     category: ExpenseCategory.operational,
     amount: 2500000,
-    date: DateTime(2024, 11, 15),
+    date: DateTime(2025, 11, 15),
     status: ExpenseStatus.approved,
     requestedByUsername: 'naufal', // Supervisor
   ),
@@ -149,7 +149,7 @@ final List<Expense> dummyExpenses = [
     title: 'Team Building Event',
     category: ExpenseCategory.employeeWelfare,
     amount: 15000000,
-    date: DateTime(2024, 11, 18),
+    date: DateTime(2025, 11, 18),
     status: ExpenseStatus.pending,
     requestedByUsername: 'haidar', // HRD
   ),
@@ -158,7 +158,7 @@ final List<Expense> dummyExpenses = [
     title: 'Software License',
     category: ExpenseCategory.technology,
     amount: 8500000,
-    date: DateTime(2024, 11, 20),
+    date: DateTime(2025, 11, 20),
     status: ExpenseStatus.approved,
     requestedByUsername: 'cecep', // Employee
   ),
@@ -167,7 +167,7 @@ final List<Expense> dummyExpenses = [
     title: 'Marketing Campaign',
     category: ExpenseCategory.marketing,
     amount: 25000000,
-    date: DateTime(2024, 11, 10),
+    date: DateTime(2025, 11, 10),
     status: ExpenseStatus.rejected,
     requestedByUsername: 'naufal', // Supervisor
   ),
@@ -176,7 +176,7 @@ final List<Expense> dummyExpenses = [
     title: 'Office Rent',
     category: ExpenseCategory.operational,
     amount: 35000000,
-    date: DateTime(2024, 11, 1),
+    date: DateTime(2025, 11, 1),
     status: ExpenseStatus.approved,
     requestedByUsername: 'fizryan', // Admin
   ),
@@ -185,7 +185,7 @@ final List<Expense> dummyExpenses = [
     title: 'Employee Training Program',
     category: ExpenseCategory.employeeWelfare,
     amount: 12000000,
-    date: DateTime(2024, 11, 5),
+    date: DateTime(2025, 11, 5),
     status: ExpenseStatus.approved,
     requestedByUsername: 'haidar', // HRD
   ),
@@ -194,7 +194,7 @@ final List<Expense> dummyExpenses = [
     title: 'Cloud Infrastructure',
     category: ExpenseCategory.technology,
     amount: 18000000,
-    date: DateTime(2024, 11, 12),
+    date: DateTime(2025, 11, 12),
     status: ExpenseStatus.pending,
     requestedByUsername: 'cecep', // Employee
   ),

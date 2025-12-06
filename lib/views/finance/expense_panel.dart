@@ -269,30 +269,23 @@ class _ExpensePanelState extends State<ExpensePanel> {
       child: DropdownButtonFormField2<String>(
         value: value,
         isExpanded: true,
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.symmetric(vertical: 16),
+          border: InputBorder.none,
+        ),
         style: const TextStyle(
           fontSize: 14,
           color: AppColor.textColor,
           fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          helperStyle: TextStyle(
-            color: AppColor.textColor.withValues(alpha: 0.7),
-          ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: const BorderSide(color: AppColor.textColor),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: const BorderSide(color: AppColor.secondLinear),
-          ),
-          errorBorder: UnderlineInputBorder(
-            borderSide: const BorderSide(color: StatusColor.errorColor),
-          ),
         ),
         dropdownStyleData: DropdownStyleData(
           decoration: BoxDecoration(
             color: AppColor.background,
             borderRadius: BorderRadius.circular(12),
           ),
+        ),
+        menuItemStyleData: const MenuItemStyleData(
+          padding: EdgeInsets.symmetric(horizontal: 16),
         ),
         items: items.map((item) {
           return DropdownMenuItem(value: item, child: Text(item));
@@ -568,175 +561,458 @@ class _ExpensePanelState extends State<ExpensePanel> {
   void _showExpenseActionDialog(BuildContext context, Expense expense) {
     showDialog(
       context: context,
-      builder: (dialogContext) => Consumer<ExpenseProvider>(
-        builder: (context, expenseProvider, _) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: UserColor.getColorByRole(
-                    widget.user.role,
-                  ).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.receipt_long,
-                  color: UserColor.getColorByRole(widget.user.role),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Expense Action',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                expense.title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColor.textColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
+      builder: (dialogContext) => Consumer2<ExpenseProvider, UserProvider>(
+        builder: (context, expenseProvider, userProvider, _) {
+          final requestedBy = userProvider.users.firstWhere(
+            (u) => u.username == expense.requestedByUsername,
+            orElse: () => User(
+              username: 'unknown',
+              password: '',
+              name: 'Unknown User',
+              role: UserRole.unknown,
+            ),
+          );
+          final statusColor = _getStatusColor(expense.status);
+          final statusIcon = _getStatusIcon(expense.status);
+
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Header with gradient
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppColor.grey200,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      expense.categoryName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColor.grey700,
+                      gradient: LinearGradient(
+                        colors: [
+                          statusColor,
+                          statusColor.withValues(alpha: 0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    expense.id,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColor.grey600,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColor.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColor.black87.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.receipt_long,
+                            color: statusColor,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Expense Details',
+                                style: TextStyle(
+                                  color: AppColor.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColor.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      statusIcon,
+                                      size: 12,
+                                      color: AppColor.white,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      expense.statusName,
+                                      style: const TextStyle(
+                                        color: AppColor.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close, color: AppColor.white),
+                        ),
+                      ],
                     ),
                   ),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title & ID
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                expense.title,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.textColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'ID: ${expense.id}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColor.grey600,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Amount Card
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                statusColor.withValues(alpha: 0.1),
+                                statusColor.withValues(alpha: 0.05),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.attach_money,
+                                    size: 20,
+                                    color: statusColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Amount',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: statusColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                Utils.formatCurrency(expense.amount),
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Info Grid
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInfoCard(
+                                'Category',
+                                expense.categoryName,
+                                Icons.category_outlined,
+                                AppColor.grey700,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildInfoCard(
+                                'Date',
+                                '${expense.date.day}/${expense.date.month}/${expense.date.year}',
+                                Icons.calendar_today,
+                                AppColor.grey700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Requester Info
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: UserColor.getColorByRole(
+                              requestedBy.role,
+                            ).withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: UserColor.getColorByRole(
+                                requestedBy.role,
+                              ).withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: UserColor.getColorByRole(
+                                    requestedBy.role,
+                                  ).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    requestedBy.name[0].toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: UserColor.getColorByRole(
+                                        requestedBy.role,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Requested By',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColor.grey600,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      requestedBy.name,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColor.textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: UserColor.getColorByRole(
+                                    requestedBy.role,
+                                  ).withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  requestedBy.role.name.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: UserColor.getColorByRole(
+                                      requestedBy.role,
+                                    ),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Actions
+                  if (expense.status == ExpenseStatus.pending)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColor.grey100,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(20),
+                          bottomRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                                _rejectExpense(expense, expenseProvider);
+                              },
+                              icon: const Icon(Icons.cancel, size: 20),
+                              label: const Text('Reject'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: StatusColor.errorColor,
+                                side: BorderSide(
+                                  color: StatusColor.errorColor,
+                                  width: 1.5,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                                _approveExpense(expense, expenseProvider);
+                              },
+                              icon: const Icon(Icons.check_circle, size: 20),
+                              label: const Text('Approve Expense'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: StatusColor.successColor,
+                                foregroundColor: AppColor.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.grey600,
+                            foregroundColor: AppColor.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Close',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 12),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColor.grey200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 4),
               Text(
-                Utils.formatCurrency(expense.amount),
+                label,
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: UserColor.getColorByRole(widget.user.role),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: AppColor.grey600,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${expense.date.day}/${expense.date.month}/${expense.date.year}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColor.grey600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(expense.status).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _getStatusIcon(expense.status),
-                      size: 14,
-                      color: _getStatusColor(expense.status),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Status: ${expense.statusName}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: _getStatusColor(expense.status),
-                      ),
-                    ),
-                  ],
+                  fontSize: 11,
+                  color: color,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          actions: [
-            if (expense.status == ExpenseStatus.pending) ...[
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                  _rejectExpense(expense, expenseProvider);
-                },
-                icon: const Icon(Icons.cancel, size: 18),
-                label: const Text('Reject'),
-                style: TextButton.styleFrom(
-                  foregroundColor: StatusColor.errorColor,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                  _approveExpense(expense, expenseProvider);
-                },
-                icon: const Icon(Icons.check_circle, size: 18),
-                label: const Text('Approve'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: StatusColor.successColor,
-                  foregroundColor: AppColor.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ] else ...[
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Close'),
-              ),
-            ],
-          ],
-        ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColor.textColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/user_c.dart';
 import 'package:hrd_system_project/models/user_m.dart';
@@ -14,8 +15,29 @@ class PayrollPanel extends StatefulWidget {
 }
 
 class _PayrollPanelState extends State<PayrollPanel> {
-  String _selectedMonth = 'November 2024';
+  late String _selectedMonth;
   String _selectedDepartment = 'All';
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    _selectedMonth = '${monthNames[now.month - 1]} ${now.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,19 +148,20 @@ class _PayrollPanelState extends State<PayrollPanel> {
   }
 
   Widget _buildMonthSelector() {
+    int currentYear = DateTime.now().year;
     final months = [
-      'January 2024',
-      'February 2024',
-      'March 2024',
-      'April 2024',
-      'May 2024',
-      'June 2024',
-      'July 2024',
-      'August 2024',
-      'September 2024',
-      'October 2024',
-      'November 2024',
-      'December 2024',
+      'January $currentYear',
+      'February $currentYear',
+      'March $currentYear',
+      'April $currentYear',
+      'May $currentYear',
+      'June $currentYear',
+      'July $currentYear',
+      'August $currentYear',
+      'September $currentYear',
+      'October $currentYear',
+      'November $currentYear',
+      'December $currentYear',
     ];
 
     return Container(
@@ -156,15 +179,27 @@ class _PayrollPanelState extends State<PayrollPanel> {
           ),
         ],
       ),
-      child: DropdownButton<String>(
+      child: DropdownButtonFormField2<String>(
         value: _selectedMonth,
         isExpanded: true,
-        underline: const SizedBox(),
-        icon: const Icon(Icons.calendar_today, color: AppColor.grey600),
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.symmetric(vertical: 16),
+          border: InputBorder.none,
+          prefixIcon: Icon(Icons.calendar_today, color: AppColor.grey600),
+        ),
         style: const TextStyle(
           fontSize: 14,
           color: AppColor.textColor,
           fontWeight: FontWeight.bold,
+        ),
+        dropdownStyleData: DropdownStyleData(
+          decoration: BoxDecoration(
+            color: AppColor.background,
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        menuItemStyleData: const MenuItemStyleData(
+          padding: EdgeInsets.symmetric(horizontal: 16),
         ),
         items: months.map((month) {
           return DropdownMenuItem(value: month, child: Text(month));
@@ -324,16 +359,28 @@ class _PayrollPanelState extends State<PayrollPanel> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColor.grey200),
       ),
-      child: DropdownButton<String>(
+      child: DropdownButtonFormField2<String>(
         value: _selectedDepartment,
         isExpanded: true,
-        underline: const SizedBox(),
-        icon: const Icon(Icons.filter_list, color: AppColor.grey600),
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.symmetric(vertical: 16),
+          border: InputBorder.none,
+          prefixIcon: Icon(Icons.filter_list, color: AppColor.grey600),
+        ),
         hint: const Text('Filter by Department'),
         style: const TextStyle(
           fontSize: 14,
           color: AppColor.textColor,
           fontWeight: FontWeight.w500,
+        ),
+        dropdownStyleData: DropdownStyleData(
+          decoration: BoxDecoration(
+            color: AppColor.background,
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        menuItemStyleData: const MenuItemStyleData(
+          padding: EdgeInsets.symmetric(horizontal: 16),
         ),
         items: departments.map((dept) {
           return DropdownMenuItem(value: dept, child: Text(dept));

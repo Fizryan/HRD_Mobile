@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hrd_system_project/controllers/user_c.dart';
 import 'package:hrd_system_project/controllers/expense_c.dart';
-import 'package:hrd_system_project/controllers/login_c.dart';
 import 'package:hrd_system_project/variables/color_data.dart';
+import 'package:hrd_system_project/views/admin/wipe_data_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
@@ -14,20 +14,29 @@ class SettingPanel extends StatefulWidget {
 }
 
 class _SettingPanelState extends State<SettingPanel> {
-  String _appVersion = '';
+  late String _appVersion;
 
   @override
   void initState() {
     super.initState();
+    _appVersion = 'Loading...';
     _loadAppVersion();
   }
 
   Future<void> _loadAppVersion() async {
-    final packageInfo = await PackageInfo.fromPlatform();
-    if (mounted) {
-      setState(() {
-        _appVersion = 'v${packageInfo.version}+${packageInfo.buildNumber}';
-      });
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = 'v${packageInfo.version}+${packageInfo.buildNumber}';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _appVersion = 'v1.0.0+1';
+        });
+      }
     }
   }
 
@@ -106,11 +115,12 @@ class _SettingPanelState extends State<SettingPanel> {
                     ),
                   ),
                   onTap: () async {
+                    if (!mounted) return;
                     final messenger = ScaffoldMessenger.of(context);
-                    await Provider.of<UserProvider>(
-                      context,
-                      listen: false,
-                    ).loadUsers();
+                    final userProvider = context.read<UserProvider>();
+
+                    await userProvider.loadUsers();
+
                     if (!mounted) return;
                     messenger.showSnackBar(
                       SnackBar(
@@ -216,11 +226,12 @@ class _SettingPanelState extends State<SettingPanel> {
                     ),
                   ),
                   onTap: () async {
+                    if (!mounted) return;
                     final messenger = ScaffoldMessenger.of(context);
-                    await Provider.of<ExpenseProvider>(
-                      context,
-                      listen: false,
-                    ).loadExpenses();
+                    final expenseProvider = context.read<ExpenseProvider>();
+
+                    await expenseProvider.loadExpenses();
+
                     if (!mounted) return;
                     messenger.showSnackBar(
                       SnackBar(
@@ -456,8 +467,8 @@ class _SettingPanelState extends State<SettingPanel> {
           ),
           const SizedBox(height: 4),
           Text(
-            _appVersion.isEmpty ? 'vLoading...' : _appVersion,
-            style: TextStyle(
+            _appVersion,
+            style: const TextStyle(
               fontSize: 13,
               color: AppColor.grey600,
               fontWeight: FontWeight.w500,
@@ -524,203 +535,38 @@ class _SettingPanelState extends State<SettingPanel> {
   }
 
   void _showWipeUserConfirmDialog(BuildContext context) {
-    final passwordController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool isPasswordVisible = false;
-
     showDialog(
       context: context,
-      builder: (ctx) => PopScope(
-        canPop: true,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) {
-            passwordController.dispose();
-          }
-        },
-        child: StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: StatusColor.errorColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.warning_rounded,
-                    color: StatusColor.errorColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    "Danger Zone",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            content: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+      barrierDismissible: false,
+      builder: (ctx) => WipeDataDialog(
+        title: "Wipe User Database",
+        content:
+            "Are you sure you want to delete ALL user data? This action cannot be undone.",
+        onConfirm: () async {
+          if (!mounted) return;
+          final provider = context.read<UserProvider>();
+          final messenger = ScaffoldMessenger.of(context);
+
+          await provider.clearAllUsers();
+
+          if (!mounted) return;
+          messenger.showSnackBar(
+            SnackBar(
+              content: const Row(
                 children: [
-                  const Text(
-                    "Are you sure you want to delete ALL user data? This action cannot be undone.",
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Enter your password to confirm:",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: !isPasswordVisible,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      hintStyle: const TextStyle(fontSize: 14),
-                      prefixIcon: const Icon(
-                        Icons.lock_outline,
-                        size: 20,
-                        color: StatusColor.errorColor,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 20,
-                          color: AppColor.grey600,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordVisible = !isPasswordVisible;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: AppColor.grey200),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: AppColor.grey200),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: StatusColor.errorColor,
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: StatusColor.errorColor,
-                          width: 1.5,
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: StatusColor.errorColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      errorStyle: const TextStyle(fontSize: 12),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      final loginController = Provider.of<LoginController>(
-                        context,
-                        listen: false,
-                      );
-                      if (loginController.loggedInUser?.password != value) {
-                        return 'Incorrect password';
-                      }
-                      return null;
-                    },
-                  ),
+                  Icon(Icons.delete_forever, color: AppColor.white),
+                  SizedBox(width: 8),
+                  Text("User database wiped successfully"),
                 ],
               ),
+              backgroundColor: StatusColor.errorColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            backgroundColor: AppColor.white,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                },
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: AppColor.grey600),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: StatusColor.errorColor,
-                  foregroundColor: AppColor.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () async {
-                  if (formKey.currentState?.validate() ?? false) {
-                    final provider = Provider.of<UserProvider>(
-                      context,
-                      listen: false,
-                    );
-                    final messenger = ScaffoldMessenger.of(context);
-                    Navigator.of(ctx).pop();
-                    await provider.clearAllUsers();
-                    if (!mounted) return;
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: const Row(
-                          children: [
-                            Icon(Icons.delete_forever, color: AppColor.white),
-                            SizedBox(width: 8),
-                            Text("User database wiped successfully"),
-                          ],
-                        ),
-                        backgroundColor: StatusColor.errorColor,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: const Text(
-                  "WIPE DATA",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -774,14 +620,15 @@ class _SettingPanelState extends State<SettingPanel> {
               ),
             ),
             onPressed: () async {
-              final provider = Provider.of<UserProvider>(
-                context,
-                listen: false,
-              );
+              if (!mounted) return;
+              final provider = context.read<UserProvider>();
               final messenger = ScaffoldMessenger.of(context);
+
               Navigator.pop(ctx);
+
               await provider.clearAllUsers();
               await provider.addUserList(dummyUsers);
+
               if (!mounted) return;
               messenger.showSnackBar(
                 SnackBar(
@@ -811,203 +658,34 @@ class _SettingPanelState extends State<SettingPanel> {
   }
 
   void _showWipeExpenseConfirmDialog(BuildContext context) {
-    final passwordController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool isPasswordVisible = false;
-
     showDialog(
       context: context,
-      builder: (ctx) => PopScope(
-        canPop: true,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) {
-            passwordController.dispose();
-          }
-        },
-        child: StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: StatusColor.errorColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.warning_rounded,
-                    color: StatusColor.errorColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    "Danger Zone",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            content: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => WipeDataDialog(
+        title: "Wipe Expense Database",
+        content:
+            "Are you sure you want to delete ALL expense data? This action cannot be undone.",
+        onConfirm: () async {
+          final provider = Provider.of<ExpenseProvider>(context, listen: false);
+          final messenger = ScaffoldMessenger.of(context);
+          await provider.clearAllExpenses();
+          if (!mounted) return;
+          messenger.showSnackBar(
+            SnackBar(
+              content: const Row(
                 children: [
-                  const Text(
-                    "Are you sure you want to delete ALL expense data? This action cannot be undone.",
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Enter your password to confirm:",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: !isPasswordVisible,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      hintStyle: const TextStyle(fontSize: 14),
-                      prefixIcon: const Icon(
-                        Icons.lock_outline,
-                        size: 20,
-                        color: StatusColor.errorColor,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 20,
-                          color: AppColor.grey600,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordVisible = !isPasswordVisible;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: AppColor.grey200),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: AppColor.grey200),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: StatusColor.errorColor,
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: StatusColor.errorColor,
-                          width: 1.5,
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: StatusColor.errorColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      errorStyle: const TextStyle(fontSize: 12),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      final loginController = Provider.of<LoginController>(
-                        context,
-                        listen: false,
-                      );
-                      if (loginController.loggedInUser?.password != value) {
-                        return 'Incorrect password';
-                      }
-                      return null;
-                    },
-                  ),
+                  Icon(Icons.delete_forever, color: AppColor.white),
+                  SizedBox(width: 8),
+                  Text("Expense database wiped successfully"),
                 ],
               ),
+              backgroundColor: StatusColor.errorColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            backgroundColor: AppColor.white,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                },
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: AppColor.grey600),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: StatusColor.errorColor,
-                  foregroundColor: AppColor.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () async {
-                  if (formKey.currentState?.validate() ?? false) {
-                    final provider = Provider.of<ExpenseProvider>(
-                      context,
-                      listen: false,
-                    );
-                    final messenger = ScaffoldMessenger.of(context);
-                    Navigator.of(ctx).pop();
-                    await provider.clearAllExpenses();
-                    if (!mounted) return;
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: const Row(
-                          children: [
-                            Icon(Icons.delete_forever, color: AppColor.white),
-                            SizedBox(width: 8),
-                            Text("Expense database wiped successfully"),
-                          ],
-                        ),
-                        backgroundColor: StatusColor.errorColor,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: const Text(
-                  "WIPE DATA",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -1061,14 +739,15 @@ class _SettingPanelState extends State<SettingPanel> {
               ),
             ),
             onPressed: () async {
-              final provider = Provider.of<ExpenseProvider>(
-                context,
-                listen: false,
-              );
+              if (!mounted) return;
+              final provider = context.read<ExpenseProvider>();
               final messenger = ScaffoldMessenger.of(context);
+
               Navigator.pop(ctx);
+
               await provider.clearAllExpenses();
               await provider.addExpenseList(dummyExpenses);
+
               if (!mounted) return;
               messenger.showSnackBar(
                 SnackBar(
